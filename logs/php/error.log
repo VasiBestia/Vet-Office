@@ -1,0 +1,7 @@
+[07-Nov-2025 21:49:13 UTC] PHP Warning:  Undefined array key "editor_post_id" in C:\Users\alexa\Local Sites\cabinet-veterinar-pet\app\public\wp-content\plugins\elementor\modules\history\revisions-manager.php on line 363
+[07-Nov-2025 23:30:52 UTC] [Image Optimizer]: info in ImageOptimization\Modules\Optimization\Classes\Optimize_Image->optimize(): Start optimization of 1021
+[07-Nov-2025 23:30:52 UTC] [Image Optimizer]: info in ImageOptimization\Modules\Optimization\Classes\Optimize_Image->optimize(): Size `full` is already optimized
+[07-Nov-2025 23:30:52 UTC] [Image Optimizer]: info in ImageOptimization\Modules\Optimization\Classes\Optimize_Image->optimize(): Size `medium` is already optimized
+[07-Nov-2025 23:30:52 UTC] [Image Optimizer]: info in ImageOptimization\Modules\Optimization\Classes\Optimize_Image->optimize(): Size `large` is already optimized
+[07-Nov-2025 23:30:52 UTC] [Image Optimizer]: info in ImageOptimization\Modules\Optimization\Classes\Optimize_Image->optimize(): Size `thumbnail` is already optimized
+[07-Nov-2025 23:30:52 UTC] [Image Optimizer]: info in ImageOptimization\Modules\Optimization\Classes\Optimize_Image->optimize(): Size `medium_large` is already optimized

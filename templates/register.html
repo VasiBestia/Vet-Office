@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Înregistrare Utilizator</title>
+</head>
+<body>
+    <main>
+        <h2>Înregistrare Utilizator Nou</h2>
+        <form id="registerForm" action="http://127.0.0.1:5000/register" method="POST">
+            <div>
+                <label for="reg_username">Username*:</label>
+                <input type="text" id="reg_username" name="username" required>
+            </div>
+            <div>
+                <label for="reg_email">E-mail*:</label>
+                <input type="email" id="reg_email" name="email" required>
+            </div>
+            <div>
+                <label for="reg_password">Password*:</label>
+                <input type="password" id="reg_password" name="password" required>
+                <p id="password_paragraph">Password must: <br>*be at least 8 characters long <br>*include at least one uppercase letter <br>*one lowercase letter
+                    <br>*one digit<br>*one special character.
+                </p>
+            </div>
+            <div>
+                <label for="reg_retype">Retype Password*:</label>
+                <input type="password" id="reg_retype" name="retype_password" required>
+            </div>
+            <button type="submit">Înregistrare</button>
+        </form>
+
+        <p>Ai deja un cont? 
+        <a href="{{ url_for('show_login_page') }}">Autentifică-te</a>
+    </p>
+    </main>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
