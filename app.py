@@ -69,8 +69,8 @@ def register_user():
         # 4. VERIFICARE UNICITATE (Bază de Date)
         cursor.execute(
             """
-            SELECT Nume, Email FROM USER_ACCOUNT 
-            WHERE Nume = ? OR Email = ?
+            SELECT Username, Email FROM USER_ACCOUNT 
+            WHERE Username = ? OR Email = ?
         """,
             (username, email),
         )
@@ -85,7 +85,7 @@ def register_user():
 
         # 5. INSERARE (Doar daca toate validarile au trecut)
         cursor.execute(
-            "INSERT INTO USER_ACCOUNT (Nume, Email, Parola) VALUES (?, ?, ?)",
+            "INSERT INTO USER_ACCOUNT (Username, Email, Parola) VALUES (?, ?, ?)",
             (username, email, password),
         )
         conexiune.commit()
@@ -113,8 +113,8 @@ def login_user():
 
         cursor.execute(
             """
-                       SELECT Nume FROM USER_ACCOUNT 
-                       WHERE Nume = ? AND Parola = ?""",
+                       SELECT Username FROM USER_ACCOUNT 
+                       WHERE Username = ? AND Parola = ?""",
             (username, password),
         )
 
@@ -211,14 +211,23 @@ def save_programare():
 @app.route("/")
 def show_register_page():
     # Va afișa conținutul din noul fișier 'register.html'
-    return fl.render_template("register.html")
+    return fl.render_template("dashboard.html")
 
 
 # --- RUTA PENTRU AFIȘAREA PAGINII DE AUTENTIFICARE ---
-@app.route("/login-page")
+@app.route("/login")
 def show_login_page():
     # Va afișa conținutul din noul fișier 'login.html'
     return fl.render_template("login.html")
+
+@app.route('/register')
+def register():
+    return fl.render_template('register.html')
+
+@app.route("/forgot-password")
+def show_forgot_password_page():
+    # Va afișa conținutul din noul fișier 'forgot-password.html'
+    return fl.render_template("forgot-password.html")
 
 
 @app.route("/save-programare")

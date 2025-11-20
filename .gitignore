@@ -1,0 +1,5 @@
+# Ignoră toate upload-urile (recomandat pentru WordPress)
+app/public/wp-content/uploads/
+
+# SAU, dacă vrei să ignori doar fișierele temporare Simply Static
+app/public/wp-content/uploads/simply-static/
