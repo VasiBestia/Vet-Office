@@ -1,5 +1,6 @@
 import flask as fl
 import sys
+from flask_sqlalchemy import SQLAlchemy
 import pyodbc
 import re
 import os
@@ -8,6 +9,7 @@ from authlib.integrations.flask_client import OAuth
 from flask_session import Session
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
+from sqlalchemy import text
 
 load_dotenv()  # Încarcă variabilele de mediu din .env
 
@@ -16,6 +18,7 @@ load_dotenv()  # Încarcă variabilele de mediu din .env
 app = fl.Flask(__name__)
 
 oauth = OAuth(app)
+
 
 # Permitem conexiuni HTTP nesecurizate pentru lucrul local
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
@@ -38,13 +41,11 @@ app.config["SESSION_COOKIE_DOMAIN"] = None
 # Inițializăm gestiunea sesiunilor
 Session(app)
 
-# --- CONFIGURAREA CONEXIUNII LA BAZA DE DATE SQL ---
-SERVER = "VASIVBM\\SQLEXPRESS"
-DATABASE = "CabinetVeterinar"
-DRIVER = "{ODBC Driver 17 for SQL Server}"
-CONN_STRING = (
-    f"DRIVER={DRIVER};SERVER={SERVER};" f"DATABASE={DATABASE};Trusted_Connection=yes;"
+app.config["SQLALCHEMY_DATABASE_URI"] = (
+    "mssql+pyodbc:///?odbc_connect=DRIVER={ODBC+Driver+17+for+SQL+Server};SERVER=VASIVBM\\SQLEXPRESS;DATABASE=CabinetVeterinar;Trusted_Connection=yes;"
 )
+
+db = SQLAlchemy(app)
 
 
 # =======================================================
@@ -93,20 +94,16 @@ def register_user():
         )
 
     try:
-        conexiune = pyodbc.connect(CONN_STRING)
-        cursor = conexiune.cursor()
-
         # 4. Verific unicitatea Username-ului și a Email-ului în BD
-        cursor.execute(
-            """
-            SELECT Username, Email FROM USER_ACCOUNT 
-            WHERE Username = ? OR Email = ?
-        """,
-            (username, email),
-        )
+        sql_check = """
+        SELECT Username, Email FROM USER_ACCOUNT 
+        WHERE Username = :user OR Email = :email
+    """
+        rezultat = db.session.execute(
+            text(sql_check), {"user": username, "email": email}
+        ).fetchone()
 
-        if cursor.fetchone():
-            conexiune.close()
+        if rezultat:
             return (
                 "ERROR: Numele de utilizator sau email-ul "
                 "există deja în baza de date.",
@@ -118,12 +115,15 @@ def register_user():
         hashed_password = bcrypt.hashpw(password_bytes, bcrypt.gensalt())
 
         # 5. Inserare în baza de date
-        cursor.execute(
-            "INSERT INTO USER_ACCOUNT (Username, Email, Parola) VALUES (?, ?, ?)",
-            (username, email, hashed_password),
+        sql_insert = """
+        INSERT INTO USER_ACCOUNT (Username, Email, Parola) 
+        VALUES (:user, :email, :password)
+    """
+        db.session.execute(
+            text(sql_insert),
+            {"user": username, "email": email, "password": hashed_password},
         )
-        conexiune.commit()
-        conexiune.close()
+        db.session.commit()
 
         # Redirecționez la pagina de login după ce înregistrarea a reușit
         return fl.redirect(fl.url_for("show_login_page"))
@@ -148,19 +148,10 @@ def login_user():
         return "ERROR: Introduceti toate campurile.", 400
 
     try:
-        conexiune = pyodbc.connect(CONN_STRING)
-        cursor = conexiune.cursor()
-
-        # 1. Selectez Hash-ul și Username-ul după Email
-        cursor.execute(
-            "SELECT Parola, Username FROM USER_ACCOUNT WHERE Email = ?",
-            (email,),
-        )
-
-        user_record = cursor.fetchone()
-        cursor.close()
-        conexiune.close()
-
+        sql_select = """
+        SELECT Parola, Username FROM USER_ACCOUNT WHERE Email = :email
+    """
+        user_record = db.session.execute(text(sql_select), {"email": email}).fetchone()
         if not user_record:
             return "ERROR: Email sau parola incorecta.", 401
 
@@ -217,22 +208,15 @@ def forgot_password():
         return ("ERROR: Te rog completează adresa de email.", 400)
 
     try:
-        conexiune = pyodbc.connect(CONN_STRING)
-        cursor = conexiune.cursor()
-
-        # Verific dacă email-ul există
-        cursor.execute(
-            "SELECT Email FROM USER_ACCOUNT WHERE Email = ?",
-            (email,),
-        )
-
-        if cursor.fetchone():
-            conexiune.close()
+        sql_check_email = """
+        SELECT Email FROM USER_ACCOUNT WHERE Email = :email
+    """
+        user_record = db.session.execute(text(sql_check_email), {"email": email}).fetchone()
+        if user_record:
             # Salvăm email-ul în sesiune pentru pasul următor (retype)
             fl.session["reset_email"] = email
             return fl.redirect(fl.url_for("show_retype_password_page"))
         else:
-            conexiune.close()
             return ("ERROR: Email-ul nu a fost găsit în baza de date.", 409)
     except pyodbc.Error as ex:
         print(f"Eroare BD la forgot password: {ex}", file=sys.stderr)
@@ -263,23 +247,27 @@ def retype_password():
         password_bytes = password.encode("utf-8")
         hashed_password = bcrypt.hashpw(password_bytes, bcrypt.gensalt())
 
-        conexiune = pyodbc.connect(CONN_STRING)
-        cursor = conexiune.cursor()
-
-        # Executăm UPDATE
-        cursor.execute(
-            "UPDATE USER_ACCOUNT SET Parola = ? WHERE Email = ?",
-            (hashed_password, email_to_update),
+        sql_update = """
+        UPDATE USER_ACCOUNT SET Parola = :password WHERE Email = :email
+    """
+        result = db.session.execute(
+            text(sql_update), {"password": hashed_password, "email": email_to_update}
         )
+        db.session.commit()
 
         # Verificăm dacă s-a modificat un rând
-        if cursor.rowcount > 0:
-            conexiune.commit()
-            fl.session.pop("reset_email", None)  # Ștergem email-ul din sesiune
+        if result.rowcount > 0:
+            db.session.commit()  # Echivalentul lui conexiune.commit()
+            fl.session.pop("reset_email", None)  # Rămâne la fel
             return fl.redirect(fl.url_for("show_login_page"))
         else:
-            conexiune.close()
-            return ("ERROR: Nu s-a putut actualiza parola.", 404)
+            # Nu mai trebuie apelat conexiune.close() sau db.session.close().
+            # În acest caz, cel mai bine este să anulezi tranzacția dacă commit-ul nu a avut loc.
+            db.session.rollback()  # Anulează orice schimbare ne-commit-ată
+            return (
+                "ERROR: Nu s-a putut actualiza parola. Email-ul nu a fost găsit.",
+                404,
+            )
 
     except pyodbc.Error as ex:
         print(f"Eroare BD la resetare parolă: {ex}", file=sys.stderr)
@@ -315,13 +303,10 @@ def authorize():
 
         # --- LOGICA TA DE BAZĂ DE DATE ---
         try:
-            conexiune = pyodbc.connect(CONN_STRING)
-            cursor = conexiune.cursor()
-
-            cursor.execute(
-                "SELECT Username FROM USER_ACCOUNT WHERE Email = ?", (google_email,)
-            )
-            existing_user = cursor.fetchone()
+            sql_check = """
+            SELECT Username FROM USER_ACCOUNT WHERE Email = ?
+            """
+            existing_user = db.session.execute(text(sql_check), (google_email,)).fetchone()
 
             if not existing_user:
                 # Register Logic (creăm username unic)
@@ -329,22 +314,20 @@ def authorize():
                 username = username_base
                 counter = 0
                 while True:
-                    cursor.execute(
-                        "SELECT Username FROM USER_ACCOUNT WHERE Username = ?",
+                    db.session.execute(
+                        text("SELECT Username FROM USER_ACCOUNT WHERE Username = ?"),
                         (username,),
                     )
-                    if not cursor.fetchone():
+                    if not db.session.fetchone():
                         break
                     counter += 1
                     username = f"{username_base}_{counter}"
 
-                cursor.execute(
-                    "INSERT INTO USER_ACCOUNT (Username, Email, Parola) VALUES (?, ?, ?)",
+                db.session.execute(
+                    text("INSERT INTO USER_ACCOUNT (Username, Email, Parola) VALUES (?, ?, ?)"),
                     (username, google_email, "GOOGLE_AUTH_USER"),
                 )
-                conexiune.commit()
-
-            conexiune.close()
+                db.session.commit()
 
         except pyodbc.Error as db_err:
             print(f"EROARE BD în OAuth: {db_err}")
@@ -366,8 +349,64 @@ def authorize():
 
 @app.route("/")
 def index():
-    # Rutează la pagina principală sau dashboard
-    return fl.render_template("dashboard.html")
+    if "logged_in" not in fl.session or not fl.session["logged_in"]:
+        return fl.redirect(fl.url_for("show_login_page"))
+
+    sql_animale = "SELECT COUNT(Id_Animal) FROM ANIMAL"
+    sql_stapani = "SELECT COUNT(Id_stapan) FROM STAPAN;"
+
+    sql_examinari = "SELECT COUNT(Id_examinari) FROM EXAMINARI;"
+    sql_luna = """
+    SELECT COUNT(Id_interventii_chirurgicale)
+    FROM INTERVENTII_CHIRURGICALE
+    WHERE MONTH(Data) = MONTH(GETDATE()) AND YEAR(Data) = YEAR(GETDATE());
+    """
+
+    card_animale = db.session.execute(text(sql_animale)).scalar()
+    card_stapani = db.session.execute(text(sql_stapani)).scalar()
+    card_luna = db.session.execute(text(sql_luna)).scalar()
+    card_examinari = db.session.execute(text(sql_examinari)).scalar()
+
+    sql_alergii = """
+        SELECT 
+            COUNT(T3.Id_Alergie) AS Numar_Alergii 
+        FROM ISTORIC_MEDICAL T1
+        JOIN FISA_MEDICALA T2 ON T1.Id_istoricmedical = T2.Id_istoricmedical
+        JOIN ALERGII T3 ON T2.Id_Alergie = T3.Id_Alergie
+        WHERE YEAR(T1.Data_vizite) = YEAR(GETDATE()) 
+        GROUP BY MONTH(T1.Data_vizite)
+        ORDER BY MONTH(T1.Data_vizite);
+    """
+    # Rezultatul este o listă de tupluri/obiecte
+    rezultat_alergii = db.session.execute(text(sql_alergii)).fetchall()
+
+    # Convertim rezultatul într-un format ușor de folosit în JavaScript:
+    alergii_data = [
+        row[0] for row in rezultat_alergii
+    ]  # Extragem doar coloana cu numărul alergiilor
+
+    pie_data = [card_examinari, card_luna, card_animale]
+
+    # 2. PREIA DATELE DIN SESIUNE
+    DEFAULT_AVATAR = fl.url_for("static", filename="img/default_avatar.jpg")
+
+    user_data = {
+        "username": fl.session.get("username", "Utilizator Necunoscut"),
+        "profile_picture_url": fl.session.get(
+            "profile_pic", DEFAULT_AVATAR
+        ),  # Cale implicită
+    }
+    return fl.render_template(
+        "dashboard.html",
+        user=user_data,
+        # ... alte variabile
+        nr_animale=card_animale,
+        nr_stapani=card_stapani,
+        nr_interventii=card_luna,  # Reutilizăm variabila din 'Intervenții Luna Asta'
+        nr_examinari=card_examinari,
+        alergii_data=alergii_data,
+        pie_data=pie_data
+    )
 
 
 @app.route("/login")
