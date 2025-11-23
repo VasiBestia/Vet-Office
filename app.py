@@ -148,51 +148,54 @@ def login_user():
         return "ERROR: Introduceti toate campurile.", 400
 
     try:
+        # 1. SELECT Parola, Username, Id_user, Id_stapan (pentru verificarea setup-ului)
         sql_select = """
-        SELECT Parola, Username FROM USER_ACCOUNT WHERE Email = :email
-    """
+            SELECT Parola, Username, Id_user
+            FROM USER_ACCOUNT
+            WHERE Email = :email
+        """
         user_record = db.session.execute(text(sql_select), {"email": email}).fetchone()
+
         if not user_record:
             return "ERROR: Email sau parola incorecta.", 401
 
+        # Extragem datele din tuplu (ne așteptăm la 4 coloane acum)
         stored_hashed_password = user_record[0]
         username = user_record[1]
-
-        # Conversia hash-ului în bytes pentru verificarea cu bcrypt
-        stored_hashed_password_bytes = stored_hashed_password.encode("utf-8")
+        user_id = user_record[2]
 
         # 2. Verific parola cu BCRYPT
-        if bcrypt.checkpw(password.encode("utf-8"), stored_hashed_password_bytes):
-
-            # --- PAROLA ESTE CORECTĂ ---
-
-            # Setăm variabilele de Sesiune Flask
-            fl.session["logged_in"] = True
-            fl.session["email"] = email
-            fl.session["username"] = username
-
-            # Creăm obiectul de Răspuns și Redirecționăm
-            response = fl.make_response(fl.redirect(fl.url_for("index")))
-
-            # LOGICA "REMEMBER ME" (Cookie-uri)
-            if remember_me:
-                expires_date = datetime.now() + timedelta(days=30)
-                # Setăm cookie-ul pe obiectul de răspuns
-                response.set_cookie(
-                    "remember_email", email, expires=expires_date, httponly=True
-                )
-            else:
-                response.delete_cookie("remember_email")
-
-            return response
-
-        else:
-            # Parola incorectă
+        if not bcrypt.checkpw(
+            password.encode("utf-8"), stored_hashed_password.encode("utf-8")
+        ):
             return "ERROR: Email sau parola incorecta.", 401
 
-    except pyodbc.Error as ex:
-        print(f"Eroare BD la login: {ex}", file=sys.stderr)
-        return "BD error: Eroare server la autentificare.", 500
+        # --- PAROLA ESTE CORECTĂ ---
+
+        # 3. SETARE SESIUNE FLASK
+        fl.session["logged_in"] = True
+        fl.session["user_id"] = user_id
+        fl.session["username"] = username
+        fl.session["email"] = email
+
+        # 4. DETERMINARE RUTA DE REDIRECTIONARE
+        response = fl.make_response(fl.redirect(fl.url_for("index")))
+        # 6. LOGICA "REMEMBER ME" (Cookie-uri)
+        if remember_me:
+            expires_date = datetime.now() + timedelta(days=30)
+            response.set_cookie(
+                "remember_email", email, expires=expires_date, httponly=True
+            )
+        else:
+            response.delete_cookie("remember_email")
+
+        return response
+
+    except Exception as e:
+        # Loghează eroarea și returnează un mesaj de eroare generic
+        print(f"Eroare la autentificare: {e}")
+        return "ERROR: Eroare internă a serverului la autentificare.", 500
+
 
 
 # =======================================================
@@ -211,7 +214,9 @@ def forgot_password():
         sql_check_email = """
         SELECT Email FROM USER_ACCOUNT WHERE Email = :email
     """
-        user_record = db.session.execute(text(sql_check_email), {"email": email}).fetchone()
+        user_record = db.session.execute(
+            text(sql_check_email), {"email": email}
+        ).fetchone()
         if user_record:
             # Salvăm email-ul în sesiune pentru pasul următor (retype)
             fl.session["reset_email"] = email
@@ -279,16 +284,16 @@ def retype_password():
 # =======================================================
 
 
-@app.route("/logout")
-def logout():
-    fl.session.clear()
-    return fl.redirect("/")
+# @app.route("/logout")
+# def logout():
+#     fl.session.clear()
+#     return fl.redirect("/")
 
 
-@app.route("/login/google")
-def login_google():
-    redirect_uri = fl.url_for("authorize", _external=True)
-    return oauth.google.authorize_redirect(redirect_uri)
+# @app.route("/login/google")
+# def login_google():
+#     redirect_uri = fl.url_for("authorize", _external=True)
+#     return oauth.google.authorize_redirect(redirect_uri)
 
 
 @app.route("/google/callback")
@@ -405,7 +410,7 @@ def index():
         nr_interventii=card_luna,  # Reutilizăm variabila din 'Intervenții Luna Asta'
         nr_examinari=card_examinari,
         alergii_data=alergii_data,
-        pie_data=pie_data
+        pie_data=pie_data,
     )
 
 
@@ -418,7 +423,7 @@ def show_login_page():
 
 
 @app.route("/register")
-def register():
+def show_register_page():
     return fl.render_template("register.html")
 
 
@@ -430,6 +435,202 @@ def show_forgot_password_page():
 @app.route("/retype-password")
 def show_retype_password_page():
     return fl.render_template("retype_password.html")
+
+
+@app.route("/animal", methods=["GET", "POST"])
+def show_animal_page():
+    # 1. Verificare Autentificare
+    if "user_id" not in fl.session:
+        return fl.redirect(fl.url_for("show_login_page")) # Asigură-te că numele rutei de login e corect
+
+    user_id = fl.session["user_id"]
+    
+    # --- LOGICA DE POST (Când apeși butonul "Salvează") ---
+    if fl.request.method == "POST":
+        try:
+            nume = fl.request.form["nume"]
+            specie = fl.request.form["specie"]
+            rasa = fl.request.form["rasa"]
+            varsta = fl.request.form["varsta"]
+            sex= fl.request.form["sex"]
+
+            # Inserăm în STAPAN
+            sql_insert = "INSERT INTO ANIMAL (Nume, Specie, Rasa, Varsta, Sex) VALUES (:n, :s, :r, :v, :x)"
+            db.session.execute(text(sql_insert), {"n": nume, "s": specie, "r": rasa, "v": varsta, "x": sex})
+
+            sql_select_new_id = """
+            SELECT Id_animal FROM ANIMAL 
+            WHERE Nume=:nume AND Specie=:specie AND Rasa=:rasa AND Varsta=:varsta AND Sex=:sex"""
+
+            new_id = db.session.execute(text(sql_select_new_id), {"nume": nume, "specie": specie, "rasa": rasa, "varsta": varsta, "sex": sex}).scalar()
+
+            sql_check = """
+
+        SELECT Id_user FROM FISA_MEDICALA
+
+        WHERE Id_user = :user_id
+          """
+            rezultat = db.session.execute(text(sql_check), {"user_id": user_id}).fetchone()
+
+            if not rezultat:
+
+                sql_insert_fisa = """
+
+                INSERT INTO FISA_MEDICALA (Id_user) VALUES (:user_id)
+
+                """
+
+                db.session.execute(text(sql_insert_fisa), {"user_id": user_id})
+
+                db.session.commit()
+            
+            # Luăm ID-ul nou creat
+
+            # Legăm de User
+            sql_link = "UPDATE FISA_MEDICALA SET Id_Animal = :sid WHERE Id_user = :uid"
+            db.session.execute(text(sql_link), {"sid": new_id, "uid": user_id})
+            
+            db.session.commit()
+            fl.flash("Date salvate cu succes!", "success")
+            
+            # Refresh la pagina ca să vedem Cardurile
+            return fl.redirect(fl.url_for("show_animal_page"))
+            
+        except Exception as e:
+            db.session.rollback()
+            fl.flash(f"Eroare: {e}", "danger")
+
+    # --- LOGICA DE GET (Afișare Pagină) ---
+    
+    # 2. Verificăm dacă avem date legate de acest user
+    # Facem JOIN direct intre USER_ACCOUNT si STAPAN
+    sql_get_data = """
+        SELECT A.Nume, A.Specie, A.Rasa, A.Varsta, A.Sex
+        FROM FISA_MEDICALA FM
+        FULL JOIN ANIMAL A ON FM.Id_animal = A.Id_animal
+        WHERE FM.Id_user = :uid
+    """
+    result = db.session.execute(text(sql_get_data), {"uid": user_id}).fetchone()
+
+    # 3. Pregătim datele pentru Template
+    user_data = {
+        "username": fl.session.get("username", "User"),
+        "profile_picture_url": fl.session.get("profile_pic", fl.url_for("static", filename="img/undraw_profile.svg"))
+    }
+
+    # Daca avem rezultat, înseamnă că omul și-a completat datele -> setup_needed = False
+    if result and result[0] is not None:
+        return fl.render_template("animal.html",
+                                  user=user_data,
+                                  setup_needed_animal=False,  # ARATĂ CARDURILE
+                                  numeanimal=result[0],
+                                  specianimal=result[1],
+                                  rasaanimal=result[2],
+                                  varstaanimal=result[3],
+                                  sexanimal=result[4])
+    else:
+        # Nu avem date -> setup_needed = True -> ARATĂ FORMULARUL
+        return fl.render_template("animal.html",
+                                  user=user_data,
+                                  setup_needed_animal=True,
+                                  numeanimal="", specianimal="", rasaanimal="", varstaanimal="", sexanimal="", alergii_data=[], pie_data=[])
+
+
+@app.route("/owner", methods=["GET", "POST"])
+def show_owners_page():
+    # 1. Verificare Autentificare
+    if "user_id" not in fl.session:
+        return fl.redirect(fl.url_for("show_login_page")) # Asigură-te că numele rutei de login e corect
+
+    user_id = fl.session["user_id"]
+    
+    # --- LOGICA DE POST (Când apeși butonul "Salvează") ---
+    if fl.request.method == "POST":
+        try:
+            nume = fl.request.form["nume"]
+            prenume = fl.request.form["prenume"]
+            telefon = fl.request.form["telefon"]
+            adresa = fl.request.form["adresa"]
+
+            # Inserăm în STAPAN
+            sql_insert = "INSERT INTO STAPAN (Nume, Prenume, Telefon, Adresa) VALUES (:n, :p, :t, :a)"
+            db.session.execute(text(sql_insert), {"n": nume, "p": prenume, "t": telefon, "a": adresa})
+
+            sql_select_new_id = """
+            SELECT Id_stapan FROM STAPAN 
+            WHERE Nume=:nume AND Prenume=:prenume AND Telefon=:telefon AND Adresa=:adresa"""
+
+            new_id = db.session.execute(text(sql_select_new_id), {"nume": nume, "prenume": prenume, "telefon": telefon, "adresa": adresa}).scalar()
+
+            sql_check = """
+
+        SELECT Id_user FROM FISA_MEDICALA
+
+        WHERE Id_user = :user_id
+          """
+            rezultat = db.session.execute(text(sql_check), {"user_id": user_id}).fetchone()
+
+            if not rezultat:
+
+                sql_insert_fisa = """
+
+                INSERT INTO FISA_MEDICALA (Id_user) VALUES (:user_id)
+
+                """
+
+            db.session.execute(text(sql_insert_fisa), {"user_id": user_id})
+
+            db.session.commit()
+            
+            # Luăm ID-ul nou creat
+
+            # Legăm de User
+            sql_link = "UPDATE FISA_MEDICALA SET Id_stapan = :sid WHERE Id_user = :uid"
+            db.session.execute(text(sql_link), {"sid": new_id, "uid": user_id})
+            
+            db.session.commit()
+            fl.flash("Date salvate cu succes!", "success")
+            
+            # Refresh la pagina ca să vedem Cardurile
+            return fl.redirect(fl.url_for("show_owners_page"))
+            
+        except Exception as e:
+            db.session.rollback()
+            fl.flash(f"Eroare: {e}", "danger")
+
+    # --- LOGICA DE GET (Afișare Pagină) ---
+    
+    # 2. Verificăm dacă avem date legate de acest user
+    # Facem JOIN direct intre USER_ACCOUNT si STAPAN
+    sql_get_data = """
+        SELECT S.Nume, S.Prenume, S.Telefon, S.Adresa
+        FROM FISA_MEDICALA FM
+        FULL JOIN STAPAN S ON FM.Id_stapan = S.Id_stapan
+        WHERE FM.Id_user = :uid
+    """
+    result = db.session.execute(text(sql_get_data), {"uid": user_id}).fetchone()
+
+    # 3. Pregătim datele pentru Template
+    user_data = {
+        "username": fl.session.get("username", "User"),
+        "profile_picture_url": fl.session.get("profile_pic", fl.url_for("static", filename="img/undraw_profile.svg"))
+    }
+
+    # Daca avem rezultat, înseamnă că omul și-a completat datele -> setup_needed = False
+    if result and result[0] is not None:
+        return fl.render_template("owner.html",
+                                  user=user_data,
+                                  setup_needed_owner=False,  # ARATĂ CARDURILE
+                                  numeowner=result[0],
+                                  prenumeowner=result[1],
+                                  telefonowner=result[2],
+                                  adresaowner=result[3])
+    else:
+        # Nu avem date -> setup_needed = True -> ARATĂ FORMULARUL
+        return fl.render_template("owner.html",
+                                  user=user_data,
+                                  setup_needed_owner=True,
+                                  numeowner="", prenumeowner="", telefonowner="", adresaowner="",alergii_data=[], pie_data=[])
 
 
 # --- Rute nefolosite (comentate) ---

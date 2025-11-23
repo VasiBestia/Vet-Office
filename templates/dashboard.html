@@ -104,12 +104,12 @@
                     <div class="bg-white py-2 collapse-inner rounded">
                         <h6 class="collapse-header">Login Screens:</h6>
                         <a class="collapse-item" href="{{ url_for('show_login_page') }}">Login</a>
-                        <a class="collapse-item" href="{{ url_for('register') }}">Register</a>
+                        <a class="collapse-item" href="{{ url_for('show_register_page') }}">Register</a>
                         <a class="collapse-item" href="{{ url_for('show_forgot_password_page') }}">Forgot Password</a>
                         <div class="collapse-divider"></div>
                         <h6 class="collapse-header">Other Pages:</h6>
-                        <a class="collapse-item" href="404.html">404 Page</a>
-                        <a class="collapse-item" href="blank.html">Blank Page</a>
+                        <a class="collapse-item" href="{{ url_for('show_owners_page') }}">Stapan</a>
+                        <a class="collapse-item" href="{{ url_for('show_animal_page') }}">Animal</a>
                     </div>
                 </div>
             </li>
@@ -689,8 +689,8 @@
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <script id="alergii-data" type="application/json">{{ alergii_data | tojson | default('[]') | safe }}</script>
-    <script id="pie-data" type="application/json">{{ pie_data | tojson | default('[]') | safe }}</script>
+    <script id="alergii-data" type="application/json">{{ alergii_data | tojson | default([]) | safe }}</script>
+    <script id="pie-data" type="application/json">{{ pie_data | tojson | default([]) | safe }}</script>
     
     <script src="{{ url_for('static', filename='js/dashboard_chart.js') }}"></script>
     
