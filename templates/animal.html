@@ -12,7 +12,8 @@
     <title>SB Admin 2 - Dashboard</title>
 
     <!-- Custom fonts for this template-->
-    <link href="{{ url_for('static', filename='vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet" type="text/css">
+    <link href="{{ url_for('static', filename='vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet"
+        type="text/css">
     <link href="{{ url_for('static', filename='css/sb-admin-2.min.css') }}" rel="stylesheet">
 
 
@@ -134,7 +135,7 @@
             <div class="text-center d-none d-md-inline">
                 <button class="rounded-circle border-0" id="sidebarToggle"></button>
             </div>
-        
+
 
         </ul>
         <!-- End of Sidebar -->
@@ -261,8 +262,7 @@
                                 </h6>
                                 <a class="dropdown-item d-flex align-items-center" href="#">
                                     <div class="dropdown-list-image mr-3">
-                                        <img class="rounded-circle" src="img/undraw_profile_1.svg"
-                                            alt="...">
+                                        <img class="rounded-circle" src="img/undraw_profile_1.svg" alt="...">
                                         <div class="status-indicator bg-success"></div>
                                     </div>
                                     <div class="font-weight-bold">
@@ -273,8 +273,7 @@
                                 </a>
                                 <a class="dropdown-item d-flex align-items-center" href="#">
                                     <div class="dropdown-list-image mr-3">
-                                        <img class="rounded-circle" src="img/undraw_profile_2.svg"
-                                            alt="...">
+                                        <img class="rounded-circle" src="img/undraw_profile_2.svg" alt="...">
                                         <div class="status-indicator"></div>
                                     </div>
                                     <div>
@@ -285,8 +284,7 @@
                                 </a>
                                 <a class="dropdown-item d-flex align-items-center" href="#">
                                     <div class="dropdown-list-image mr-3">
-                                        <img class="rounded-circle" src="img/undraw_profile_3.svg"
-                                            alt="...">
+                                        <img class="rounded-circle" src="img/undraw_profile_3.svg" alt="...">
                                         <div class="status-indicator bg-warning"></div>
                                     </div>
                                     <div>
@@ -315,19 +313,22 @@
 
                         <!-- Nav Item - User Information -->
                         <li class="nav-item navbar-dropdown dropdown-user dropdown">
-                            <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
+                            <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);"
+                                data-bs-toggle="dropdown">
                                 <div class="avatar avatar-online">
-                                    <img src="{{ user.profile_picture_url }}" alt="User" class="w-px-40 h-auto rounded-circle">
+                                    <img src="{{ user.profile_picture_url }}" alt="User"
+                                        class="w-px-40 h-auto rounded-circle">
                                 </div>
                             </a>
-                        
+
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li>
                                     <a class="dropdown-item" href="#">
                                         <div class="d-flex">
                                             <div class="flex-shrink-0 me-3">
                                                 <div class="avatar avatar-online">
-                                                    <img src="{{ user.profile_picture_url }}" alt="User" class="w-px-40 h-auto rounded-circle">
+                                                    <img src="{{ user.profile_picture_url }}" alt="User"
+                                                        class="w-px-40 h-auto rounded-circle">
                                                 </div>
                                             </div>
                                             <div class="flex-grow-1">
@@ -337,11 +338,11 @@
                                         </div>
                                     </a>
                                 </li>
-                        
+
                                 <li>
                                     <div class="dropdown-divider"></div>
                                 </li>
-                        
+
                                 <li>
                                     <a class="dropdown-item" href="#">
                                         <i class="bx bx-user me-2"></i>
@@ -354,11 +355,11 @@
                                         <span class="align-middle">Settings</span>
                                     </a>
                                 </li>
-                        
+
                                 <li>
                                     <div class="dropdown-divider"></div>
                                 </li>
-                        
+
                                 <li>
                                     <a class="dropdown-item" href="#"> <i class="bx bx-power-off me-2"></i>
                                         <span class="align-middle">Log Out</span>
@@ -371,274 +372,315 @@
 
                 <!-- Begin Page Content -->
                 <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                        <h1 class="h3 mb-0 text-gray-800">Despre Animal</h1>
+                    <h1 class="h3 mb-0 text-gray-800">Despre Animal</h1>
+                </div>
+
+                <!-- Mesaje Flash (Erori/Succes) -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
+
+                <!-- AICI E LOGICA MAGICĂ: IF / ELSE -->
+
+                {% if setup_needed_animal %}
+
+                <!-- CAZUL 1: NU AI DATE -> FORMULAR ONBOARDING -->
+                <div class="card shadow mb-4 border-left-danger">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Bine ai venit! Completează datele tale:</h6>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('show_animal_page') }}">
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label>Nume</label>
+                                    <input type="text" class="form-control" name="nume" placeholder="Ex: Max" required>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label>Rasa</label>
+                                    <input type="text" class="form-control" name="rasa"
+                                        placeholder="Ex: Ciobănesc German" required>
+                                </div>
+
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label>Varsta</label>
+                                    <input type="text" class="form-control" name="varsta" placeholder="Ex: 5" required>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label>Specie</label>
+                                    <input type="text" class="form-control" name="specie" placeholder="Ex: Caine/Pisica"
+                                        required>
+                                </div>
+
+                            </div>
+                            <div class="form-group">
+                                <label>Sex</label>
+                                <input type="text" class="form-control" name="sex" placeholder="Ex: M/F" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block">Salvează Date Animalut</button>
+                        </form>
+                    </div>
+                </div>
+
+                {% else %}
+
+                <!-- CAZUL 2: AI DATE -> AFIȘEAZĂ CARDURILE -->
+                <div class="row">
+
+                    <!-- Card Nume -->
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-primary shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Nume
+                                        </div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ numeanimal }}</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-user fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Mesaje Flash (Erori/Succes) -->
-                    {% with messages = get_flashed_messages(with_categories=true) %}
-                      {% if messages %}
-                        {% for category, message in messages %}
-                          <div class="alert alert-{{ category }}">{{ message }}</div>
-                        {% endfor %}
-                      {% endif %}
-                    {% endwith %}
+                    <!-- Card Prenume -->
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-success shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Rasă
+                                        </div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ rasaanimal }}</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-id-card fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-                    <!-- AICI E LOGICA MAGICĂ: IF / ELSE -->
-                    
-                    {% if setup_needed_animal %}
-                    
-                        <!-- CAZUL 1: NU AI DATE -> FORMULAR ONBOARDING -->
-                        <div class="card shadow mb-4 border-left-danger">
+                    <!-- Card Telefon (Nou) -->
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-info shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Vârstă</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ varstaanimal }}</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-phone fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card Adresa -->
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-warning shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Sex</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ sexanimal }}</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-map-marker-alt fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content Row -->
+                <div class="row">
+
+                    <!-- Content Column -->
+                    <div class="col-lg-6 mb-4">
+
+                        <!-- Project Card Example -->
+                        <div class="card shadow mb-4">
                             <div class="card-header py-3">
-                                <h6 class="m-0 font-weight-bold text-primary">Bine ai venit! Completează datele tale:</h6>
+                                <h6 class="m-0 font-weight-bold text-primary">📝 Fisa Medicală Detaliată {{ numeanimal
+                                    }}</h6>
                             </div>
                             <div class="card-body">
-                                <form method="POST" action="{{ url_for('show_animal_page') }}">
-                                    <div class="form-row">
-                                        <div class="form-group col-md-6">
-                                            <label>Nume</label>
-                                            <input type="text" class="form-control" name="nume" placeholder="Ex: Max" required>
-                                        </div>
-                                        <div class="form-group col-md-6">
-                                            <label>Rasa</label>
-                                            <input type="text" class="form-control" name="rasa" placeholder="Ex: Ciobănesc German" required>
-                                        </div>
-                                        
-                                    </div>
-                                    <div class="form-row">
-                                        <div class="form-group col-md-6">
-                                            <label>Varsta</label>
-                                            <input type="text" class="form-control" name="varsta" placeholder="Ex: 5" required>
-                                        </div>
-                                        <div class="form-group col-md-6">
-                                            <label>Specie</label>
-                                            <input type="text" class="form-control" name="specie" placeholder="Ex: Caine/Pisica" required>
-                                        </div>
-                                        
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Sex</label>
-                                        <input type="text" class="form-control" name="sex" placeholder="Ex: M/F" required>
-                                    </div>
-                                    <button type="submit" class="btn btn-primary btn-block">Salvează Date Animalut</button>
-                                </form>
+
+                                <dl class="row">
+
+                                    <dt class="col-sm-12 border-bottom mb-2 mt-2 text-info">INFORMAȚII ALERGII</dt>
+
+                                    <dt class="col-sm-3">Tip Alergii:</dt>
+                                    <dd class="col-sm-9">{{ medical_report.Lista_Tip_Alergii }}</dd>
+
+                                    <dt class="col-sm-3">Simptome:</dt>
+                                    <dd class="col-sm-9">{{ medical_report.Lista_Simptome }}</dd>
+
+                                    <dt class="col-sm-3">Tratament Alergii:</dt>
+                                    <dd class="col-sm-9">{{ medical_report.Lista_Tratamente_Alergii }}</dd>
+
+
+                                    <dt class="col-sm-12 border-bottom mb-2 mt-4 text-info">INFORMAȚII EXAMINARE</dt>
+
+                                    <dt class="col-sm-3">Condiție Corporală:</dt>
+                                    <dd class="col-sm-9">{{ medical_report.Condiție_Corporală_Examinare }}</dd>
+
+                                    <dt class="col-sm-3">Greutate:</dt>
+                                    <dd class="col-sm-9">{{ medical_report.Greutate_Examinare }}</dd>
+
+                                    <dt class="col-sm-3">Temperatură:</dt>
+                                    <dd class="col-sm-9">{{ medical_report.Temperatură_Examinare }}</dd>
+
+
+                                    <dt class="col-sm-12 border-bottom mb-2 mt-4 text-info">MEDICAMENTE CURENTE</dt>
+
+                                    <dt class="col-sm-3">Nume Medicamente:</dt>
+                                    <dd class="col-sm-9 text-danger font-weight-bold">{{
+                                        medical_report.Lista_Nume_Medicamente }}</dd>
+
+                                    <dt class="col-sm-3">Dozaj/Frecvență:</dt>
+                                    <dd class="col-sm-9">{{ medical_report.Lista_Doze }} / {{
+                                        medical_report.Lista_Frecvente }}</dd>
+
+                                    <dt class="col-sm-12 border-bottom mb-2 mt-4 text-info">ISTORIC MEDICAL</dt>
+
+                                    <dt class="col-sm-3">Data_vizite:</dt>
+                                    <dd class="col-sm-9">{{ medical_report.Lista_Data_Vizite }}</dd>
+
+                                    <dt class="col-sm-3">Vaccinari:</dt>
+                                    <dd class="col-sm-9">{{ medical_report.Lista_Data_Vaccinare }}</dd>
+
+                                    <dt class="col-sm-3">Data_vaccinari:</dt>
+                                    <dd class="col-sm-9">{{ medical_report.Lista_Data_Vaccinare }}</dd>
+
+
+                                    <dt class="col-sm-3">Tip Deparazitări:</dt>
+                                    <dd class="col-sm-9">{{ medical_report.Lista_Tipuri_Deparazitări }}</dd>
+
+                                    <dt class="col-sm-3">Condiții Speciale:</dt>
+                                    <dd class="col-sm-9">{{ medical_report.Lista_Conditii_Speciale }}</dd>
+
+                                </dl>
                             </div>
                         </div>
+                        <div class="row mb-4">
+                            <div class="col-12 text-right">
 
-                    {% else %}
+                                <a href="{{ url_for('show_add_visit_form', animal_id=current_animal_id) }}"
+                                    class="btn btn-primary btn-icon-split">
+                                    <span class="icon text-white-50"><i class="fas fa-plus"></i></span>
+                                    <span class="text">Adaugă Vizită Nouă</span>
+                                </a>
 
-                        <!-- CAZUL 2: AI DATE -> AFIȘEAZĂ CARDURILE -->
-                        <div class="row">
+                                <a href="#" class="btn btn-danger btn-icon-split ml-2" data-toggle="modal" data-target="#deleteModal">
+                                    <span class="icon text-white-50">
+                                        <i class="fas fa-trash"></i>
+                                    </span>
+                                    <span class="text">Șterge Vizita</span>
+                                </a>
 
-                            <!-- Card Nume -->
-                            <div class="col-xl-3 col-md-6 mb-4">
-                                <div class="card border-left-primary shadow h-100 py-2">
-                                    <div class="card-body">
-                                        <div class="row no-gutters align-items-center">
-                                            <div class="col mr-2">
-                                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Nume</div>
-                                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ numeanimal }}</div>
-                                            </div>
-                                            <div class="col-auto">
-                                                <i class="fas fa-user fa-2x text-gray-300"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <a class="btn btn-info btn-icon-split ml-2">
+                                    <span class="icon text-white-50"><i class="fas fa-edit"></i></span>
+                                    <span class="text">Editeaza Profil</span>
+                                </a>
+
                             </div>
-
-                            <!-- Card Prenume -->
-                            <div class="col-xl-3 col-md-6 mb-4">
-                                <div class="card border-left-success shadow h-100 py-2">
-                                    <div class="card-body">
-                                        <div class="row no-gutters align-items-center">
-                                            <div class="col mr-2">
-                                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Rasă</div>
-                                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ rasaanimal }}</div>
-                                            </div>
-                                            <div class="col-auto">
-                                                <i class="fas fa-id-card fa-2x text-gray-300"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Card Telefon (Nou) -->
-                            <div class="col-xl-3 col-md-6 mb-4">
-                                <div class="card border-left-info shadow h-100 py-2">
-                                    <div class="card-body">
-                                        <div class="row no-gutters align-items-center">
-                                            <div class="col mr-2">
-                                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Vârstă</div>
-                                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ varstaanimal }}</div>
-                                            </div>
-                                            <div class="col-auto">
-                                                <i class="fas fa-phone fa-2x text-gray-300"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Card Adresa -->
-                            <div class="col-xl-3 col-md-6 mb-4">
-                                <div class="card border-left-warning shadow h-100 py-2">
-                                    <div class="card-body">
-                                        <div class="row no-gutters align-items-center">
-                                            <div class="col mr-2">
-                                                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Sex</div>
-                                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ sexanimal }}</div>
-                                            </div>
-                                            <div class="col-auto">
-                                                <i class="fas fa-map-marker-alt fa-2x text-gray-300"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                    <!-- Content Row -->
-                    <div class="row">
-
-                        <!-- Content Column -->
-                        <div class="col-lg-6 mb-4">
-
-                            <!-- Project Card Example -->
-                            <div class="card shadow mb-4">
-                                <div class="card-header py-3">
-                                    <h6 class="m-0 font-weight-bold text-primary">Projects</h6>
-                                </div>
-                                <div class="card-body">
-                                    <h4 class="small font-weight-bold">Server Migration <span
-                                            class="float-right">20%</span></h4>
-                                    <div class="progress mb-4">
-                                        <div class="progress-bar bg-danger" role="progressbar" style="width: 20%"
-                                            aria-valuenow="20" aria-valuemin="0" aria-valuemax="100"></div>
-                                    </div>
-                                    <h4 class="small font-weight-bold">Sales Tracking <span
-                                            class="float-right">40%</span></h4>
-                                    <div class="progress mb-4">
-                                        <div class="progress-bar bg-warning" role="progressbar" style="width: 40%"
-                                            aria-valuenow="40" aria-valuemin="0" aria-valuemax="100"></div>
-                                    </div>
-                                    <h4 class="small font-weight-bold">Customer Database <span
-                                            class="float-right">60%</span></h4>
-                                    <div class="progress mb-4">
-                                        <div class="progress-bar" role="progressbar" style="width: 60%"
-                                            aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"></div>
-                                    </div>
-                                    <h4 class="small font-weight-bold">Payout Details <span
-                                            class="float-right">80%</span></h4>
-                                    <div class="progress mb-4">
-                                        <div class="progress-bar bg-info" role="progressbar" style="width: 80%"
-                                            aria-valuenow="80" aria-valuemin="0" aria-valuemax="100"></div>
-                                    </div>
-                                    <h4 class="small font-weight-bold">Account Setup <span
-                                            class="float-right">Complete!</span></h4>
-                                    <div class="progress">
-                                        <div class="progress-bar bg-success" role="progressbar" style="width: 100%"
-                                            aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-
-                        <div class="col-lg-6 mb-4">
-
-                            <!-- Illustrations -->
-                            <div class="card shadow mb-4">
-                                <div class="card-header py-3">
-                                    <h6 class="m-0 font-weight-bold text-primary">Illustrations</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="text-center">
-                                        <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 25rem;"
-                                            src="img/undraw_posting_photo.svg" alt="...">
-                                    </div>
-                                    <p>Add some quality, svg illustrations to your project courtesy of <a
-                                            target="_blank" rel="nofollow" href="https://undraw.co/">unDraw</a>, a
-                                        constantly updated collection of beautiful svg images that you can use
-                                        completely free and without attribution!</p>
-                                    <a target="_blank" rel="nofollow" href="https://undraw.co/">Browse Illustrations on
-                                        unDraw &rarr;</a>
-                                </div>
-                            </div>
-
-                            <!-- Approach -->
-                            <div class="card shadow mb-4">
-                                <div class="card-header py-3">
-                                    <h6 class="m-0 font-weight-bold text-primary">Development Approach</h6>
-                                </div>
-                                <div class="card-body">
-                                    <p>SB Admin 2 makes extensive use of Bootstrap 4 utility classes in order to reduce
-                                        CSS bloat and poor page performance. Custom CSS classes are used to create
-                                        custom components and custom utility classes.</p>
-                                    <p class="mb-0">Before working with this theme, you should become familiar with the
-                                        Bootstrap framework, especially the utility classes.</p>
-                                </div>
-                            </div>
-
                         </div>
                     </div>
-                <!-- /.container-fluid -->
-             {% endif %}
-            </div>
-            <!-- End of Main Content -->
+                    <!-- /.container-fluid -->
+                    {% endif %}
+                </div>
+                <!-- End of Main Content -->
 
-            <!-- Footer -->
-            <footer class="sticky-footer bg-white">
-                <div class="container my-auto">
-                    <div class="copyright text-center my-auto">
-                        <span>Copyright &copy; Puppy Vet 2025</span>
+                <!-- Footer -->
+                <footer class="sticky-footer bg-white">
+                    <div class="container my-auto">
+                        <div class="copyright text-center my-auto">
+                            <span>Copyright &copy; Puppy Vet 2025</span>
+                        </div>
+                    </div>
+                </footer>
+                <!-- End of Content Wrapper -->
+
+            </div>
+
+            <!-- End of Page Wrapper -->
+
+            <!-- Scroll to Top Button-->
+            <a class="scroll-to-top rounded" href="#page-top">
+                <i class="fas fa-angle-up"></i>
+            </a>
+
+            <!-- Logout Modal-->
+            <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Ready to Leave?</h5>
+                            <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">×</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">Select "Logout" below if you are ready to end your current session.
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+                            <a class="btn btn-primary" href="login.html">Logout</a>
+                        </div>
                     </div>
                 </div>
-            </footer>
-        <!-- End of Content Wrapper -->
+            </div>
+            <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title text-danger" id="deleteModalLabel">⚠️ Ești sigur?</h5>
+                            <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">×</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            Vrei să ștergi <strong>ultima vizită</strong> înregistrată pentru acest animal?<br>
+                            Această acțiune este ireversibilă!
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" type="button" data-dismiss="modal">Anulează</button>
 
-    </div>
-    
-    <!-- End of Page Wrapper -->
-
-    <!-- Scroll to Top Button-->
-    <a class="scroll-to-top rounded" href="#page-top">
-        <i class="fas fa-angle-up"></i>
-    </a>
-
-    <!-- Logout Modal-->
-    <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Ready to Leave?</h5>
-                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">×</span>
-                    </button>
-                </div>
-                <div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
-                    <a class="btn btn-primary" href="login.html">Logout</a>
+                            <form action="{{ url_for('delete_last_visit', animal_id=current_animal_id) }}"
+                                method="POST">
+                                <button type="submit" class="btn btn-danger">Da, Șterge Vizita</button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Bootstrap core JavaScript-->
-    <script src="{{ url_for('static', filename='vendor/jquery/jquery.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='vendor/jquery-easing/jquery.easing.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/sb-admin-2.min.js') }}"></script>
-    <!-- Page level plugins -->
-    <script src="{{ url_for('static', filename='vendor/chart.js/Chart.min.js') }}"></script>
-    
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
+            <!-- Bootstrap core JavaScript-->
+            <script src="{{ url_for('static', filename='vendor/jquery/jquery.min.js') }}"></script>
+            <script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+            <script src="{{ url_for('static', filename='vendor/jquery-easing/jquery.easing.min.js') }}"></script>
+            <script src="{{ url_for('static', filename='js/sb-admin-2.min.js') }}"></script>
+            <!-- Page level plugins -->
+            <script src="{{ url_for('static', filename='vendor/chart.js/Chart.min.js') }}"></script>
+
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 
 </body>
 

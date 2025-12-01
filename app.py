@@ -197,7 +197,6 @@ def login_user():
         return "ERROR: Eroare internă a serverului la autentificare.", 500
 
 
-
 # =======================================================
 # --- LOGICA 3: RESETARE PAROLĂ ---
 # =======================================================
@@ -311,7 +310,9 @@ def authorize():
             sql_check = """
             SELECT Username FROM USER_ACCOUNT WHERE Email = ?
             """
-            existing_user = db.session.execute(text(sql_check), (google_email,)).fetchone()
+            existing_user = db.session.execute(
+                text(sql_check), (google_email,)
+            ).fetchone()
 
             if not existing_user:
                 # Register Logic (creăm username unic)
@@ -329,7 +330,9 @@ def authorize():
                     username = f"{username_base}_{counter}"
 
                 db.session.execute(
-                    text("INSERT INTO USER_ACCOUNT (Username, Email, Parola) VALUES (?, ?, ?)"),
+                    text(
+                        "INSERT INTO USER_ACCOUNT (Username, Email, Parola) VALUES (?, ?, ?)"
+                    ),
                     (username, google_email, "GOOGLE_AUTH_USER"),
                 )
                 db.session.commit()
@@ -441,10 +444,12 @@ def show_retype_password_page():
 def show_animal_page():
     # 1. Verificare Autentificare
     if "user_id" not in fl.session:
-        return fl.redirect(fl.url_for("show_login_page")) # Asigură-te că numele rutei de login e corect
+        return fl.redirect(
+            fl.url_for("show_login_page")
+        )  # Asigură-te că numele rutei de login e corect
 
     user_id = fl.session["user_id"]
-    
+
     # --- LOGICA DE POST (Când apeși butonul "Salvează") ---
     if fl.request.method == "POST":
         try:
@@ -452,17 +457,29 @@ def show_animal_page():
             specie = fl.request.form["specie"]
             rasa = fl.request.form["rasa"]
             varsta = fl.request.form["varsta"]
-            sex= fl.request.form["sex"]
+            sex = fl.request.form["sex"]
 
             # Inserăm în STAPAN
             sql_insert = "INSERT INTO ANIMAL (Nume, Specie, Rasa, Varsta, Sex) VALUES (:n, :s, :r, :v, :x)"
-            db.session.execute(text(sql_insert), {"n": nume, "s": specie, "r": rasa, "v": varsta, "x": sex})
+            db.session.execute(
+                text(sql_insert),
+                {"n": nume, "s": specie, "r": rasa, "v": varsta, "x": sex},
+            )
 
             sql_select_new_id = """
             SELECT Id_animal FROM ANIMAL 
             WHERE Nume=:nume AND Specie=:specie AND Rasa=:rasa AND Varsta=:varsta AND Sex=:sex"""
 
-            new_id = db.session.execute(text(sql_select_new_id), {"nume": nume, "specie": specie, "rasa": rasa, "varsta": varsta, "sex": sex}).scalar()
+            new_id = db.session.execute(
+                text(sql_select_new_id),
+                {
+                    "nume": nume,
+                    "specie": specie,
+                    "rasa": rasa,
+                    "varsta": varsta,
+                    "sex": sex,
+                },
+            ).scalar()
 
             sql_check = """
 
@@ -470,7 +487,9 @@ def show_animal_page():
 
         WHERE Id_user = :user_id
           """
-            rezultat = db.session.execute(text(sql_check), {"user_id": user_id}).fetchone()
+            rezultat = db.session.execute(
+                text(sql_check), {"user_id": user_id}
+            ).fetchone()
 
             if not rezultat:
 
@@ -483,25 +502,25 @@ def show_animal_page():
                 db.session.execute(text(sql_insert_fisa), {"user_id": user_id})
 
                 db.session.commit()
-            
+
             # Luăm ID-ul nou creat
 
             # Legăm de User
             sql_link = "UPDATE FISA_MEDICALA SET Id_Animal = :sid WHERE Id_user = :uid"
             db.session.execute(text(sql_link), {"sid": new_id, "uid": user_id})
-            
+
             db.session.commit()
             fl.flash("Date salvate cu succes!", "success")
-            
+
             # Refresh la pagina ca să vedem Cardurile
             return fl.redirect(fl.url_for("show_animal_page"))
-            
+
         except Exception as e:
             db.session.rollback()
             fl.flash(f"Eroare: {e}", "danger")
 
     # --- LOGICA DE GET (Afișare Pagină) ---
-    
+
     # 2. Verificăm dacă avem date legate de acest user
     # Facem JOIN direct intre USER_ACCOUNT si STAPAN
     sql_get_data = """
@@ -515,35 +534,434 @@ def show_animal_page():
     # 3. Pregătim datele pentru Template
     user_data = {
         "username": fl.session.get("username", "User"),
-        "profile_picture_url": fl.session.get("profile_pic", fl.url_for("static", filename="img/undraw_profile.svg"))
+        "profile_picture_url": fl.session.get(
+            "profile_pic", fl.url_for("static", filename="img/undraw_profile.svg")
+        ),
     }
 
     # Daca avem rezultat, înseamnă că omul și-a completat datele -> setup_needed = False
     if result and result[0] is not None:
-        return fl.render_template("animal.html",
-                                  user=user_data,
-                                  setup_needed_animal=False,  # ARATĂ CARDURILE
-                                  numeanimal=result[0],
-                                  specianimal=result[1],
-                                  rasaanimal=result[2],
-                                  varstaanimal=result[3],
-                                  sexanimal=result[4])
+        # Obținem Id-ul animalului curent legat de user (dacă există)
+        current_animal_id = db.session.execute(
+            text("SELECT FM.Id_Animal FROM FISA_MEDICALA FM WHERE FM.Id_user = :uid"),
+            {"uid": user_id},
+        ).scalar()
+
+        sql_medical_report = """
+SELECT 
+    -- === 1. EXAMINARI (Doar Ultima Vizită) ===
+    (
+        SELECT TOP 1 E.Greutate 
+        FROM FISA_MEDICALA FM 
+        JOIN EXAMINARI E ON FM.Id_examinari = E.Id_examinari 
+        WHERE FM.Id_Animal = :aid 
+        ORDER BY FM.Id_fisa_medicala DESC
+    ) AS Greutate_Examinare,
+
+    (
+        SELECT TOP 1 E.Temperatură 
+        FROM FISA_MEDICALA FM 
+        JOIN EXAMINARI E ON FM.Id_examinari = E.Id_examinari 
+        WHERE FM.Id_Animal = :aid 
+        ORDER BY FM.Id_fisa_medicala DESC
+    ) AS Temperatură_Examinare,
+
+    (
+        SELECT TOP 1 E.Condiție_Corporală 
+        FROM FISA_MEDICALA FM 
+        JOIN EXAMINARI E ON FM.Id_examinari = E.Id_examinari 
+        WHERE FM.Id_Animal = :aid 
+        ORDER BY FM.Id_fisa_medicala DESC
+    ) AS Condiție_Corporală_Examinare,
+
+    -- === 2. ALERGII (Lista Unică) ===
+    (
+        SELECT STRING_AGG(Tip, ', ') 
+        FROM (
+            SELECT DISTINCT A.Tip 
+            FROM ALERGII A 
+            JOIN FISA_MEDICALA FM ON A.Id_Alergie = FM.Id_Alergie 
+            WHERE FM.Id_Animal = :aid
+        ) AS T_AlergiiTip
+    ) AS Lista_Tip_Alergii,
+
+    (
+        SELECT STRING_AGG(Simptome, ', ') 
+        FROM (
+            SELECT DISTINCT A.Simptome 
+            FROM ALERGII A 
+            JOIN FISA_MEDICALA FM ON A.Id_Alergie = FM.Id_Alergie 
+            WHERE FM.Id_Animal = :aid
+        ) AS T_AlergiiSimp
+    ) AS Lista_Simptome,
+    
+    (
+        SELECT STRING_AGG(Tratament_recomandat, ', ') 
+        FROM (
+            SELECT DISTINCT A.Tratament_recomandat 
+            FROM ALERGII A 
+            JOIN FISA_MEDICALA FM ON A.Id_Alergie = FM.Id_Alergie 
+            WHERE FM.Id_Animal = :aid
+        ) AS T_AlergiiTrat
+    ) AS Lista_Tratamente_Alergii,
+
+    -- === 3. MEDICAMENTE (Lista Unică) ===
+    (
+        SELECT STRING_AGG(Nume_Medicamente, ', ') 
+        FROM (
+            SELECT DISTINCT M.Nume_Medicamente 
+            FROM MEDICAMENTE M 
+            JOIN FISA_MEDICALA FM ON M.Id_medicamente = FM.Id_medicamente 
+            WHERE FM.Id_Animal = :aid
+        ) AS T_MedNume
+    ) AS Lista_Nume_Medicamente,
+
+    (
+        SELECT STRING_AGG(Doza_recomandată, ', ') 
+        FROM (
+            SELECT DISTINCT M.Doza_recomandată 
+            FROM MEDICAMENTE M 
+            JOIN FISA_MEDICALA FM ON M.Id_medicamente = FM.Id_medicamente 
+            WHERE FM.Id_Animal = :aid
+        ) AS T_MedDoza
+    ) AS Lista_Doze,
+
+    (
+        SELECT STRING_AGG(Frecvență_administrarezi, ', ') 
+        FROM (
+            SELECT DISTINCT M.Frecvență_administrarezi 
+            FROM MEDICAMENTE M 
+            JOIN FISA_MEDICALA FM ON M.Id_medicamente = FM.Id_medicamente 
+            WHERE FM.Id_Animal = :aid
+        ) AS T_MedFrec
+    ) AS Lista_Frecvente,
+
+    -- === 4. ISTORIC MEDICAL (Lista Unică - Vaccinuri, Deparazitări) ===
+    (
+    SELECT STRING_AGG(Data_vizite, ', ') 
+        FROM (
+            SELECT DISTINCT CONVERT(varchar, IM.Data_vizite) as Data_vizite
+            FROM ISTORIC_MEDICAL IM 
+            JOIN FISA_MEDICALA FM ON IM.Id_istoricmedical = FM.Id_istoricmedical 
+            WHERE FM.Id_Animal = :aid
+        ) AS T_DataVizite
+    ) AS Lista_Data_Vizite,
+
+    (
+        SELECT STRING_AGG(Vaccinări, ', ') 
+        FROM (
+            SELECT DISTINCT IM.Vaccinări 
+            FROM ISTORIC_MEDICAL IM 
+            JOIN FISA_MEDICALA FM ON IM.Id_istoricmedical = FM.Id_istoricmedical 
+            WHERE FM.Id_Animal = :aid
+        ) AS T_Vaccin
+    ) AS Lista_Vaccinări,
+
+    (
+        SELECT STRING_AGG(Data_vaccinare, ', ') 
+        FROM (
+            SELECT DISTINCT CONVERT(varchar, IM.Data_vaccinare) as Data_vaccinare
+            FROM ISTORIC_MEDICAL IM 
+            JOIN FISA_MEDICALA FM ON IM.Id_istoricmedical = FM.Id_istoricmedical 
+            WHERE FM.Id_Animal = :aid
+        ) AS T_DataVacc
+    ) AS Lista_Data_Vaccinare,
+
+    (
+        SELECT STRING_AGG(Tipuri_Deparazitări, ', ') 
+        FROM (
+            SELECT DISTINCT IM.Tipuri_Deparazitări 
+            FROM ISTORIC_MEDICAL IM 
+            JOIN FISA_MEDICALA FM ON IM.Id_istoricmedical = FM.Id_istoricmedical 
+            WHERE FM.Id_Animal = :aid
+        ) AS T_Depara
+    ) AS Lista_Tipuri_Deparazitări,
+
+    (
+        SELECT STRING_AGG(Conditii_Speciale, ', ') 
+        FROM (
+            SELECT DISTINCT IM.Conditii_Speciale 
+            FROM ISTORIC_MEDICAL IM 
+            JOIN FISA_MEDICALA FM ON IM.Id_istoricmedical = FM.Id_istoricmedical 
+            WHERE FM.Id_Animal = :aid
+        ) AS T_Conditii
+    ) AS Lista_Conditii_Speciale
+
+"""
+
+        # Executăm interogarea folosind ID-ul animalului curent
+        report_row = db.session.execute(
+            text(sql_medical_report), {"aid": current_animal_id}
+        ).first()
+
+        # MODIFICARE 3: Transformăm rândul SQL într-un dicționar Python pentru Jinja
+        medical_report = {}
+        if report_row:
+            # _mapping ne permite să transformăm rezultatul într-un dicționar cu chei (numele coloanelor)
+            medical_report = dict(report_row._mapping)
+
+        return fl.render_template(
+            "animal.html",
+            user=user_data,
+            setup_needed_animal=False,  # ARATĂ CARDURILE
+            numeanimal=result[0],
+            specianimal=result[1],
+            rasaanimal=result[2],
+            varstaanimal=result[3],
+            sexanimal=result[4],
+            medical_report=medical_report,
+            current_animal_id=current_animal_id,
+        )
     else:
         # Nu avem date -> setup_needed = True -> ARATĂ FORMULARUL
-        return fl.render_template("animal.html",
-                                  user=user_data,
-                                  setup_needed_animal=True,
-                                  numeanimal="", specianimal="", rasaanimal="", varstaanimal="", sexanimal="", alergii_data=[], pie_data=[])
+        return fl.render_template(
+            "animal.html",
+            user=user_data,
+            setup_needed_animal=True,
+            numeanimal="",
+            specianimal="",
+            rasaanimal="",
+            varstaanimal="",
+            sexanimal="",
+            alergii_data=[],
+            pie_data=[],
+            medical_report={},
+            current_animal_id=None,
+        )
+
+
+@app.route("/animal/add-visit/<int:animal_id>", methods=["GET", "POST"])
+def show_add_visit_form(animal_id):
+    # Verificare de bază (autentificare)
+    if "user_id" not in fl.session:
+        return fl.redirect(fl.url_for("show_login_page"))
+
+    # --- LOGICA DE PROCESARE (POST) ---
+    if fl.request.method == "POST":
+        try:
+            # 1. Preluarea Datelor din Formular
+            greutate = fl.request.form.get("greutate")
+            temperatura = fl.request.form.get("temperatura")
+            conditie_corporala = fl.request.form.get("conditie_corporala")
+
+            simptome = fl.request.form.get("simptome")
+            descriere = fl.request.form.get(
+                "descriere"
+            )  # Folosit ca descriere_animal/diagnostic
+
+            tip_alergie = fl.request.form.get("tip")
+            simptome_alergie = fl.request.form.get("simptome")
+            tratament_alergie = fl.request.form.get("tratament")
+
+            nume_medicament = fl.request.form.get("nume_medicament")
+            tip_medicament = fl.request.form.get("tip_medicament")
+            doza = fl.request.form.get("doza")
+            frecventa = fl.request.form.get("frecventa")
+
+            data_vizita = fl.request.form.get("data_vizita")
+            tip_vaccinare = fl.request.form.get("tip_vaccinare")
+            data_vaccinare = fl.request.form.get("data_vaccinare")
+            tip_deparazitare = fl.request.form.get("tip_deparazitare")
+            conditii_speciale = fl.request.form.get("conditii_speciale")
+
+            # --- ÎNSERĂRI ÎN BD ---
+
+            # 2. Inserare în EXAMINARI
+            # 1. INSERT în EXAMINARI
+            sql_insert_examinare = """
+                INSERT INTO EXAMINARI 
+                    (Greutate, Temperatură, Condiție_Corporală, Simptome, Descriere_animal) 
+                OUTPUT INSERTED.Id_examinari
+                VALUES 
+                    (:g, :t, :cc, :s, :d);
+            """
+
+            id_examinare = db.session.execute(
+                text(sql_insert_examinare),
+                {
+                    "g": greutate,
+                    "t": temperatura,
+                    "cc": conditie_corporala,
+                    "s": simptome,
+                    "d": descriere,
+                },
+            ).scalar()
+
+            db.session.commit()
+
+            # 2. INSERT în MEDICAMENTE
+            sql_insert_medicament = """    
+                INSERT INTO MEDICAMENTE
+                    (Nume_Medicamente, Tip, Doza_recomandată, Frecvență_administrarezi) 
+                OUTPUT INSERTED.Id_medicamente
+                VALUES
+                    (:n, :t, :d, :f);
+            """
+
+            id_medicament = db.session.execute(
+                text(sql_insert_medicament),
+                {
+                    "n": nume_medicament,
+                    "t": tip_medicament,
+                    "d": doza,
+                    "f": frecventa,
+                },
+            ).scalar()
+
+            db.session.commit()
+
+            # 3. Inserare în MEDICAMENTE (Se inserează doar dacă a fost specificat un nume de medicament)
+            sql_istoric_medical = text(
+                """
+            INSERT INTO ISTORIC_MEDICAL
+                (Data_vizite, Vaccinări, Data_vaccinare, Tipuri_Deparazitări, Conditii_Speciale)
+            OUTPUT INSERTED.Id_IstoricMedical
+            VALUES
+                (:dv, :v, :dvacc, :td, :cs);
+        """
+            )
+
+            id_istoric_medical = db.session.execute(
+                sql_istoric_medical,
+                {
+                    "dv": data_vizita,
+                    "v": tip_vaccinare,
+                    "dvacc": data_vaccinare,
+                    "td": tip_deparazitare,
+                    "cs": conditii_speciale,
+                },
+            ).scalar()
+
+            db.session.commit()
+
+            sql_alergie = text(
+                """
+    INSERT INTO ALERGII
+        (Tip, Simptome, Tratament_recomandat)
+    OUTPUT INSERTED.Id_Alergie
+    VALUES
+        (:tip, :simptome, :tratament);
+"""
+            )
+
+            id_alergie = db.session.execute(
+                sql_alergie,
+                {
+                    "tip": tip_alergie,
+                    "simptome": simptome_alergie,
+                    "tratament": tratament_alergie
+                },
+            ).scalar()
+
+            db.session.commit()
+
+            # 4. Actualizarea FISA_MEDICALA
+            # Notă: Această logică este simplificată!
+            # Într-un sistem real, fiecare vizită ar trebui să fie o înregistrare nouă,
+            # dar în contextul tău, actualizăm Fisa Medicala existentă a animalului,
+            # adăugând noile ID-uri la cele existente (dacă folosești relații 1-la-1)
+            # sau actualizând câmpurile corespunzătoare.
+
+            # Pentru simplitate, presupunem că vrem să adăugăm noile ID-uri la fișa animalului curent:
+            sql_insert_fisa = """
+            INSERT INTO FISA_MEDICALA 
+                (Id_examinari, Id_medicamente, Id_Animal, Id_Alergie,Id_istoricmedical)
+            VALUES
+                (:ide, :idm, :aid, :ida, :idim)
+            """
+
+            db.session.execute(
+                text(sql_insert_fisa),
+                {
+                    "ide": id_examinare,
+                    "idm": id_medicament,
+                    "aid": animal_id,
+                    "ida": id_alergie,
+                    "idim": id_istoric_medical,
+                },
+            )
+
+            # 5. Commit și Feedback
+            db.session.commit()
+            fl.flash(f"Vizită salvată pentru animalul ID {animal_id}!", "success")
+
+            # Redirecționează înapoi la pagina animalului
+            return fl.redirect(fl.url_for("show_animal_page"))
+
+        except Exception as e:
+            db.session.rollback()
+
+            # 💥 MODIFICARE 1: Afișăm eroarea în log-ul serverului (consolă)
+            print(f"--- EROARE BAZA DE DATE ---")
+            print(f"Vizită eșuată pentru animal ID {animal_id}. Detaliu: {e}")
+            print(f"---------------------------")
+
+            # 💥 MODIFICARE 2: Afișăm o parte din eroare utilizatorului
+            fl.flash(
+                f"Eroare la salvare. Verificați tipul datelor introduse. Detaliu: {e}",
+                "danger",
+            )
+
+            # Redirecționează înapoi la formular pentru a nu pierde datele
+            return fl.redirect(fl.url_for("show_add_visit_form", animal_id=animal_id))
+
+    # --- LOGICA DE AFIȘARE (GET) ---
+    # Într-un sistem real, ar trebui să te asiguri că animal_id este valid și că aparține user-ului.
+
+    # 💥 Notă: Parametrul 'animal_id' este necesar și în formularul HTML pentru acțiune!
+    return fl.render_template("Adding_new_interogation.html", animal_id=animal_id)
+
+@app.route("/animal/delete-last/<int:animal_id>", methods=["POST"])
+def delete_last_visit(animal_id):
+    # Verificare securitate
+    if "user_id" not in fl.session:
+        return fl.redirect(fl.url_for("show_login_page"))
+
+    try:
+        # 1. Găsim ID-ul ultimei vizite (Cea mai recentă Fișă Medicală)
+        # Folosim TOP 1 și ORDER BY DESC pentru a lua ultima inserată
+        sql_find_last = """
+            SELECT TOP 1 Id_fisa_medicala 
+            FROM FISA_MEDICALA 
+            WHERE Id_Animal = :aid 
+            ORDER BY Id_fisa_medicala DESC
+        """
+        result = db.session.execute(text(sql_find_last), {"aid": animal_id}).fetchone()
+
+        if result:
+            fisa_id_to_delete = result[0]
+            
+            # 2. Ștergem înregistrarea din FISA_MEDICALA
+            # Notă: Dacă vrei să ștergi și din EXAMINARI/MEDICAMENTE, ar trebui să iei ID-urile lor înainte să ștergi fișa
+            # Dar ștergerea din FISA_MEDICALA este suficientă pentru a o scoate din istoric.
+            
+            sql_delete = "DELETE FROM FISA_MEDICALA WHERE Id_fisa_medicala = :fid"
+            db.session.execute(text(sql_delete), {"fid": fisa_id_to_delete})
+            
+            db.session.commit()
+            fl.flash("Ultima vizită a fost ștearsă cu succes.", "warning")
+        else:
+            fl.flash("Nu există vizite de șters pentru acest animal.", "info")
+
+    except Exception as e:
+        db.session.rollback()
+        fl.flash(f"Eroare la ștergere: {e}", "danger")
+        print(f"Eroare delete: {e}")
+
+    # Ne întoarcem la pagina animalului
+    return fl.redirect(fl.url_for("show_animal_page"))
 
 
 @app.route("/owner", methods=["GET", "POST"])
 def show_owners_page():
     # 1. Verificare Autentificare
     if "user_id" not in fl.session:
-        return fl.redirect(fl.url_for("show_login_page")) # Asigură-te că numele rutei de login e corect
+        return fl.redirect(
+            fl.url_for("show_login_page")
+        )  # Asigură-te că numele rutei de login e corect
 
     user_id = fl.session["user_id"]
-    
+
     # --- LOGICA DE POST (Când apeși butonul "Salvează") ---
     if fl.request.method == "POST":
         try:
@@ -554,13 +972,23 @@ def show_owners_page():
 
             # Inserăm în STAPAN
             sql_insert = "INSERT INTO STAPAN (Nume, Prenume, Telefon, Adresa) VALUES (:n, :p, :t, :a)"
-            db.session.execute(text(sql_insert), {"n": nume, "p": prenume, "t": telefon, "a": adresa})
+            db.session.execute(
+                text(sql_insert), {"n": nume, "p": prenume, "t": telefon, "a": adresa}
+            )
 
             sql_select_new_id = """
             SELECT Id_stapan FROM STAPAN 
             WHERE Nume=:nume AND Prenume=:prenume AND Telefon=:telefon AND Adresa=:adresa"""
 
-            new_id = db.session.execute(text(sql_select_new_id), {"nume": nume, "prenume": prenume, "telefon": telefon, "adresa": adresa}).scalar()
+            new_id = db.session.execute(
+                text(sql_select_new_id),
+                {
+                    "nume": nume,
+                    "prenume": prenume,
+                    "telefon": telefon,
+                    "adresa": adresa,
+                },
+            ).scalar()
 
             sql_check = """
 
@@ -568,7 +996,9 @@ def show_owners_page():
 
         WHERE Id_user = :user_id
           """
-            rezultat = db.session.execute(text(sql_check), {"user_id": user_id}).fetchone()
+            rezultat = db.session.execute(
+                text(sql_check), {"user_id": user_id}
+            ).fetchone()
 
             if not rezultat:
 
@@ -581,25 +1011,25 @@ def show_owners_page():
             db.session.execute(text(sql_insert_fisa), {"user_id": user_id})
 
             db.session.commit()
-            
+
             # Luăm ID-ul nou creat
 
             # Legăm de User
             sql_link = "UPDATE FISA_MEDICALA SET Id_stapan = :sid WHERE Id_user = :uid"
             db.session.execute(text(sql_link), {"sid": new_id, "uid": user_id})
-            
+
             db.session.commit()
             fl.flash("Date salvate cu succes!", "success")
-            
+
             # Refresh la pagina ca să vedem Cardurile
             return fl.redirect(fl.url_for("show_owners_page"))
-            
+
         except Exception as e:
             db.session.rollback()
             fl.flash(f"Eroare: {e}", "danger")
 
     # --- LOGICA DE GET (Afișare Pagină) ---
-    
+
     # 2. Verificăm dacă avem date legate de acest user
     # Facem JOIN direct intre USER_ACCOUNT si STAPAN
     sql_get_data = """
@@ -613,24 +1043,35 @@ def show_owners_page():
     # 3. Pregătim datele pentru Template
     user_data = {
         "username": fl.session.get("username", "User"),
-        "profile_picture_url": fl.session.get("profile_pic", fl.url_for("static", filename="img/undraw_profile.svg"))
+        "profile_picture_url": fl.session.get(
+            "profile_pic", fl.url_for("static", filename="img/undraw_profile.svg")
+        ),
     }
 
     # Daca avem rezultat, înseamnă că omul și-a completat datele -> setup_needed = False
     if result and result[0] is not None:
-        return fl.render_template("owner.html",
-                                  user=user_data,
-                                  setup_needed_owner=False,  # ARATĂ CARDURILE
-                                  numeowner=result[0],
-                                  prenumeowner=result[1],
-                                  telefonowner=result[2],
-                                  adresaowner=result[3])
+        return fl.render_template(
+            "owner.html",
+            user=user_data,
+            setup_needed_owner=False,  # ARATĂ CARDURILE
+            numeowner=result[0],
+            prenumeowner=result[1],
+            telefonowner=result[2],
+            adresaowner=result[3],
+        )
     else:
         # Nu avem date -> setup_needed = True -> ARATĂ FORMULARUL
-        return fl.render_template("owner.html",
-                                  user=user_data,
-                                  setup_needed_owner=True,
-                                  numeowner="", prenumeowner="", telefonowner="", adresaowner="",alergii_data=[], pie_data=[])
+        return fl.render_template(
+            "owner.html",
+            user=user_data,
+            setup_needed_owner=True,
+            numeowner="",
+            prenumeowner="",
+            telefonowner="",
+            adresaowner="",
+            alergii_data=[],
+            pie_data=[],
+        )
 
 
 # --- Rute nefolosite (comentate) ---
