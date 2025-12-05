@@ -1,0 +1,106 @@
+ /* 1. Fundal General Medical */
+        body {
+            background-color: #f0fdf4 !important;
+            background-image: linear-gradient(135deg, #e6fffa 0%, #b2f5ea 100%) !important;
+            min-height: 100vh;
+        }
+
+        /* 2. Cardul Principal */
+        .card {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08) !important;
+            overflow: hidden;
+        }
+
+        /* 3. Input-uri și Textareas */
+        .form-control {
+            border-radius: 12px !important;
+            border: 1px solid #e2e8f0;
+            padding: 1rem 1rem;
+            height: auto; /* Permite ajustarea înălțimii */
+            font-size: 0.9rem;
+            background-color: #f8fafc;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus {
+            background-color: #fff;
+            border-color: #38b2ac; /* Verde teal la focus */
+            box-shadow: 0 0 0 0.2rem rgba(56, 178, 172, 0.25);
+        }
+
+        /* Input Group (pentru KG și Grade) - stilizare unitara */
+        .input-group-text {
+            background-color: #319795;
+            color: white;
+            border: none;
+            border-top-right-radius: 12px !important;
+            border-bottom-right-radius: 12px !important;
+            font-weight: bold;
+        }
+        
+        /* Fix pentru colțurile input-urilor din grupuri */
+        .input-group > .form-control {
+            border-top-right-radius: 0 !important;
+            border-bottom-right-radius: 0 !important;
+        }
+
+        /* 4. Titluri de Secțiuni */
+        h6.font-weight-bold {
+            color: #2c7a7b !important; /* Verde închis */
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.85rem;
+            margin-top: 1.5rem;
+        }
+
+        /* 5. Butoane */
+        .btn-primary {
+            background-color: #319795 !important;
+            border-color: #319795 !important;
+            border-radius: 12px !important;
+            font-weight: 700;
+            padding: 0.75rem 1rem;
+            transition: transform 0.2s;
+        }
+
+        .btn-primary:hover {
+            background-color: #234e52 !important;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: #e2e8f0 !important;
+            color: #4a5568 !important;
+            border: 1px solid #cbd5e0 !important;
+            border-radius: 12px !important;
+            font-weight: 600;
+            padding: 0.75rem 1rem;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #cbd5e0 !important;
+        }
+
+        /* Header Icon Circle */
+        .icon-circle-header {
+            width: 70px;
+            height: 70px;
+            background-color: #e6fffa;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            border: 2px dashed #319795;
+        }
+        .icon-circle-header i {
+            color: #319795;
+            font-size: 2rem;
+        }
+        
+        /* Linii delimitatoare */
+        hr {
+            border-top: 1px solid #e6fffa;
+        }

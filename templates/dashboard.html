@@ -6,29 +6,30 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
+    <meta name="description" content="Puppy Vet Dashboard">
     <meta name="author" content="">
 
-    <title>Dashboard Clinica</title>
+    <title>Dashboard Clinica - Puppy Vet</title>
 
-    <!-- Custom fonts for this template-->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
     <link href="{{ url_for('static', filename='vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet" type="text/css">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+
+    <link href="{{ url_for('static', filename='css/dashboard_style.css') }}" rel="stylesheet">
+
     <link href="{{ url_for('static', filename='css/sb-admin-2.min.css') }}" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.min.css') }}">
-
-
 </head>
 
 <body id="page-top">
 
-    <!-- Page Wrapper -->
     <div id="wrapper">
 
-        <!-- Sidebar -->
-        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+        <ul class="navbar-nav sidebar accordion" id="accordionSidebar">
 
-            <!-- Sidebar - Brand -->
-            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{{ url_for('index') }}">
+            <a class="sidebar-brand d-flex align-items-center justify-content-center text-decoration-none" href="{{ url_for('index') }}">
                 <div class="sidebar-brand-icon rotate-n-15">
                     <i class="fas fa-paw"></i>
                 </div>
@@ -36,10 +37,9 @@
             </a>
 
 
-            <!-- Divider -->
-            <hr class="sidebar-divider">
+            <hr class="sidebar-divider my-0">
             
-            <li class="nav-item active">
+            <li class="nav-item active mt-3">
                 <a class="nav-link" href="{{ url_for('show_owners_page') }}">
                     <i class="fas fa-fw fa-user"></i>
                     <span>Stapan</span></a>
@@ -51,15 +51,8 @@
                     <span>Animal</span></a>
             </li>
 
-            <!-- Divider -->
             <hr class="sidebar-divider">
 
-            <!-- Heading -->
-            <div class="sidebar-heading">
-                Other Pages
-            </div>
-
-            <!-- Nav Item - Pages Collapse Menu -->
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapsePages"
                     aria-expanded="true" aria-controls="collapsePages">
@@ -75,33 +68,22 @@
                 </div>
             </li>
 
-            <!-- Divider -->
-            <hr class="sidebar-divider d-none d-md-block">
-
-            <!-- Sidebar Toggler (Sidebar) -->
-            <div class="text-center d-none d-md-inline">
-                <button class="rounded-circle border-0" id="sidebarToggle"></button>
-            </div>
-        
-
         </ul>
-        <!-- End of Sidebar -->
-
-        <!-- Content Wrapper -->
         <div id="content-wrapper" class="d-flex flex-column">
 
-            <!-- Main Content -->
             <div id="content">
 
-                <!-- Topbar -->
-                <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+
+                <nav class="navbar navbar-expand navbar-light topbar mb-4 static-top">
                 
-                    <!-- Sidebar Toggle (Topbar) -->
-                
+                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3 text-primary">
+                        <i class="fa fa-bars"></i>
+                    </button>
+
                     <form action="{{ url_for('search_animal') }}" method="GET"
                         class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
                         <div class="input-group">
-                            <input type="text" class="form-control bg-light border-0 small" name="q"
+                            <input type="text" class="form-control bg-light small" name="q"
                                 placeholder="Caută pacient (nume)..." aria-label="Search" aria-describedby="basic-addon2">
                             <div class="input-group-append">
                                 <button class="btn btn-primary" type="submit">
@@ -111,23 +93,13 @@
                         </div>
                     </form>
 
+                    <ul class="navbar-nav ml-auto align-items-center">
 
-                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
-                        <i class="fa fa-bars"></i>
-                    </button>
-
-                    
-
-                    <!-- Topbar Navbar -->
-                    <ul class="navbar-nav ml-auto">
-
-                        <!-- Nav Item - Search Dropdown (Visible Only XS) -->
                         <li class="nav-item dropdown no-arrow d-sm-none">
                             <a class="nav-link dropdown-toggle" href="#" id="searchDropdown" role="button"
-                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <i class="fas fa-search fa-fw"></i>
                             </a>
-                            <!-- Dropdown - Messages -->
                             <div class="dropdown-menu dropdown-menu-right p-3 shadow animated--grow-in"
                                 aria-labelledby="searchDropdown">
                                 <form class="form-inline mr-auto w-100 navbar-search">
@@ -145,180 +117,159 @@
                             </div>
                         </li>
 
-                        <div class="topbar-divider d-none d-sm-block"></div>
+                        <div class="topbar-divider d-none d-sm-block mx-3" style="height: 30px; border-right: 1px solid #e3e6f0;"></div>
                         
-                        <!-- Nav Item - User Information -->
                         <li class="nav-item navbar-dropdown dropdown-user dropdown">
-                            <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-toggle="dropdown">
-                                <div class="avatar avatar-online">
-                                    <img src="{{ user.profile_picture_url }}" alt="User" alt="User" class="rounded-circle"
+                            <a class="nav-link dropdown-toggle hide-arrow d-flex align-items-center" href="javascript:void(0);" data-bs-toggle="dropdown">
+                                <div class="avatar avatar-online me-2">
+                                    <img src="{{ user.profile_picture_url }}" alt="User" class="rounded-circle shadow-sm"
                                         style="width: 40px; height: 40px; object-fit: cover;">
                                 </div>
+                                <span class="d-none d-lg-inline text-gray-600 small fw-medium">{{ user.username }}</span>
                             </a>
                         
-                            <ul class="dropdown-menu dropdown-menu-right shadow animated--grow-in">
-        <li>
-            <a class="dropdown-item" href="#">
-                <div class="d-flex">
-                    <div class="flex-shrink-0 me-3">
-                        <div class="avatar avatar-online">
-                            <img src="{{ user.profile_picture_url }}" alt="User" class="rounded-circle"
-                                style="width: 40px; height: 40px; object-fit: cover;">
-                        </div>
-                    </div>
-                    <div class="flex-grow-1">
-                        <span class="fw-semibold d-block">{{ user.username }}</span>
-                        <small class="text-muted">Admin</small>
-                    </div>
-                </div>
-            </a>
-        </li>
+                            <ul class="dropdown-menu dropdown-menu-end shadow animated--grow-in">
+                                <li>
+                                    <a class="dropdown-item" href="#">
+                                        <div class="d-flex">
+                                            <div class="flex-shrink-0 me-3">
+                                                <div class="avatar avatar-online">
+                                                    <img src="{{ user.profile_picture_url }}" alt="User" class="rounded-circle"
+                                                        style="width: 40px; height: 40px; object-fit: cover;">
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <span class="fw-semibold d-block">{{ user.username }}</span>
+                                                <small class="text-muted">Admin</small>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </li>
+                            
+                                <li>
+                                    <div class="dropdown-divider"></div>
+                                </li>
+                            
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('show_profile_page') }}">
+                                        <i class="bx bx-user me-2"></i>
+                                        <span class="align-middle">Profile</span>
+                                    </a>
+                                </li>
+                            
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('show_settings_page') }}">
+                                        <i class="bx bx-cog me-2"></i>
+                                        <span class="align-middle">Settings</span>
+                                    </a>
+                                </li>
+                            
+                                <li>
+                                    <div class="dropdown-divider"></div>
+                                </li>
+                            
+                                <li>
+                                    <a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#logoutModal">
+                                        <i class="bx bx-power-off me-2"></i>
+                                        <span class="align-middle">Log Out</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
     
-        <li>
-            <div class="dropdown-divider"></div>
-        </li>
-    
-        <li>
-            <a class="dropdown-item" href="{{ url_for('show_profile_page') }}">
-                <i class="bx bx-user me-2"></i>
-                <span class="align-middle">Profile</span>
-            </a>
-        </li>
-    
-        <li>
-            <a class="dropdown-item" href="{{ url_for('show_settings_page') }}">
-                <i class="bx bx-cog me-2"></i>
-                <span class="align-middle">Settings</span>
-            </a>
-        </li>
-    
-        <li>
-            <div class="dropdown-divider"></div>
-        </li>
-    
-        <li>
-            <a class="dropdown-item" href="#" data-toggle="modal" data-target="#logoutModal">
-                <i class="bx bx-power-off me-2"></i>
-                <span class="align-middle">Log Out</span>
-            </a>
-        </li>
-    </ul>
-    </li>
-    
-    
-    </nav>
-                <!-- End of Topbar -->
+                </nav>
+                <div class="container-fluid px-4">
 
-                <!-- Begin Page Content -->
-                <div class="container-fluid">
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <h1 class="h3 mb-0 text-gray-800 fw-bold">Dashboard General</h1>
+                    </div>
 
-                    <!-- Content Row -->
                     <div class="row">
 
-                        <!-- Earnings (Monthly) Card Example -->
                         <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-primary shadow h-100 py-2">
+                            <div class="card summary-card card-teal h-100">
                                 <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                        
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1 ">
-                                                ANIMALE ÎNREGISTRATE</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ nr_animale }}</div>
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <div class="text-label">Animale Înregistrate</div>
+                                            <div class="text-value">{{ nr_animale }}</div>
                                         </div>
-                        
-                                        <div class="col-auto">
-                                            <i class="fas fa-paw fa-2x text-gray-300"></i>
-                                        </div>
-                        
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Earnings (Monthly) Card Example -->
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-success shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                                Nr Stapani</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ nr_stapani }}</div>
-                                        </div>
-                                        <div class="col-auto">
-                                            <i class="fas fa-user fa-2x text-gray-300"></i>
+                                        <div class="summary-icon-wrapper">
+                                            <i class="fas fa-paw fa-2x"></i>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Earnings (Monthly) Card Example -->
                         <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-info shadow h-100 py-2">
+                            <div class="card summary-card card-green h-100">
                                 <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Intervenții
-                                                luna aceasta
-                                            </div>
-                                            <div class="row no-gutters align-items-center">
-                                                <div class="col-auto">
-                                                    <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800">{{ nr_interventii}}</div>
-                                                </div>
-                                                <div class="col">
-                                                    <div class="progress progress-sm mr-2">
-                                                        <div class="progress-bar bg-info" role="progressbar"
-                                                            style="width: 50%" aria-valuenow="50" aria-valuemin="0"
-                                                            aria-valuemax="100"></div>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <div class="text-label">Nr Stăpâni</div>
+                                            <div class="text-value">{{ nr_stapani }}</div>
                                         </div>
-                                        <div class="col-auto">
-                                            <i class="fas fa-syringe fa-2x text-gray-300"></i>
+                                        <div class="summary-icon-wrapper">
+                                            <i class="fas fa-user fa-2x"></i>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Pending Requests Card Example -->
                         <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-warning shadow h-100 py-2">
+                            <div class="card summary-card card-info h-100">
                                 <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                                Examinari</div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ nr_examinari }}</div>
+                                    <div class="d-flex align-items-center justify-content-between mb-3">
+                                        <div>
+                                            <div class="text-label">Intervenții Luna Aceasta</div>
+                                            <div class="text-value">{{ nr_interventii}}</div>
                                         </div>
-                                        <div class="col-auto">
-                                            <i class="fas fa-stethoscope fa-2x text-gray-300"></i>
+                                        <div class="summary-icon-wrapper">
+                                            <i class="fas fa-syringe fa-2x"></i>
+                                        </div>
+                                    </div>
+                                    <div class="progress progress-sm rounded-pill bg-light">
+                                        <div class="progress-bar" role="progressbar"
+                                            style="width: 50%" aria-valuenow="50" aria-valuemin="0"
+                                            aria-valuemax="100"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-3 col-md-6 mb-4">
+                            <div class="card summary-card card-warning h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <div class="text-label">Examinări</div>
+                                            <div class="text-value">{{ nr_examinari }}</div>
+                                        </div>
+                                        <div class="summary-icon-wrapper">
+                                            <i class="fas fa-stethoscope fa-2x"></i>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Content Row -->
 
                     <div class="row">
                         <div class="col-xl-8 col-lg-7">
-                            <div class="card shadow mb-4">
-                    
-                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                                    <h6 class="m-0 font-weight-bold text-primary">Alergies Overview</h6>
+                            <div class="card mb-4">
+                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-transparent border-bottom-0">
+                                    <h6 class="m-0 font-weight-bold" style="color: var(--vet-primary);">Allergies Overview</h6>
                                     <div class="dropdown no-arrow">
-                                        <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown"
+                                        <a class="dropdown-toggle text-gray-400" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown"
                                             aria-haspopup="true" aria-expanded="false">
-                                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                                            <i class="fas fa-ellipsis-v fa-sm fa-fw"></i>
                                         </a>
-                                        <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
+                                        <div class="dropdown-menu dropdown-menu-end shadow animated--fade-in"
                                             aria-labelledby="dropdownMenuLink">
-                                            <div class="dropdown-header">Dropdown Header:</div>
+                                            <div class="dropdown-header">Options:</div>
                                             <a class="dropdown-item" href="#">Action</a>
                                             <a class="dropdown-item" href="#">Another action</a>
                                             <div class="dropdown-divider"></div>
@@ -326,7 +277,6 @@
                                         </div>
                                     </div>
                                 </div>
-                    
                                 <div class="card-body">
                                     <div class="chart-area">
                                         <canvas id="allergiesChart"></canvas>
@@ -336,18 +286,17 @@
                         </div>
                     
                         <div class="col-xl-4 col-lg-5">
-                            <div class="card shadow mb-4">
-                    
-                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                                    <h6 class="m-0 font-weight-bold text-primary">Medical Sources</h6>
+                            <div class="card mb-4">
+                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-transparent border-bottom-0">
+                                    <h6 class="m-0 font-weight-bold" style="color: var(--vet-primary);">Medical Sources</h6>
                                     <div class="dropdown no-arrow">
-                                        <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown"
+                                        <a class="dropdown-toggle text-gray-400" href="#" role="button" id="dropdownMenuLink2" data-bs-toggle="dropdown"
                                             aria-haspopup="true" aria-expanded="false">
-                                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                                            <i class="fas fa-ellipsis-v fa-sm fa-fw"></i>
                                         </a>
-                                        <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in"
-                                            aria-labelledby="dropdownMenuLink">
-                                            <div class="dropdown-header">Dropdown Header:</div>
+                                        <div class="dropdown-menu dropdown-menu-end shadow animated--fade-in"
+                                            aria-labelledby="dropdownMenuLink2">
+                                            <div class="dropdown-header">Options:</div>
                                             <a class="dropdown-item" href="#">Action</a>
                                             <a class="dropdown-item" href="#">Another action</a>
                                             <div class="dropdown-divider"></div>
@@ -355,21 +304,19 @@
                                         </div>
                                     </div>
                                 </div>
-                    
                                 <div class="card-body">
                                     <div class="chart-pie pt-4 pb-2">
                                         <canvas id="sourcesChart"></canvas>
                                     </div>
-                    
-                                    <div class="mt-4 text-center small">
+                                    <div class="mt-4 text-center small fw-medium">
                                         <span class="mr-2">
-                                            <i class="fas fa-circle" style="color: #696cff;"></i> Examinations
+                                            <i class="fas fa-circle" style="color: var(--vet-primary);"></i> Examinations
+                                        </span>
+                                        <span class="mr-2 mx-2">
+                                            <i class="fas fa-circle" style="color: var(--vet-secondary);"></i> Interventions
                                         </span>
                                         <span class="mr-2">
-                                            <i class="fas fa-circle" style="color: #71dd37;"></i> Interventions
-                                        </span>
-                                        <span class="mr-2">
-                                            <i class="fas fa-circle" style="color: #03c3ec;"></i> Animals
+                                            <i class="fas fa-circle" style="color: var(--vet-info);"></i> Animals
                                         </span>
                                     </div>
                                 </div>
@@ -378,63 +325,47 @@
                     </div>
 
                 </div>
-
-            </div>
-            <!-- End of Main Content -->
-
-            <!-- Footer -->
-            <footer class="sticky-footer bg-white">
+                </div>
+            <footer class="sticky-footer bg-white mt-auto">
                 <div class="container my-auto">
-                    <div class="copyright text-center my-auto">
-                        <span>Copyright &copy; Puppy Vet 2025</span>
+                    <div class="copyright text-center my-auto text-muted small">
+                        <span>Copyright &copy; Puppy Vet 2025. All rights reserved.</span>
                     </div>
                 </div>
             </footer>
-            <!-- End of Footer -->
-
+            </div>
         </div>
-        <!-- End of Content Wrapper -->
-
-    </div>
-    <!-- End of Page Wrapper -->
-
-    <!-- Scroll to Top Button-->
-    <a class="scroll-to-top rounded" href="#page-top">
+    <a class="scroll-to-top rounded p-2 bg-primary text-white d-flex align-items-center justify-content-center" href="#page-top" style="width: 40px; height: 40px;">
         <i class="fas fa-angle-up"></i>
     </a>
 
-    <!-- Logout Modal-->
     <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
         aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Ready to Leave?</h5>
-                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">×</span>
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-bottom-0">
+                    <h5 class="modal-title fw-bold text-gray-800" id="exampleModalLabel">Ready to Leave?</h5>
+                    <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close">
                     </button>
                 </div>
-                <div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
-                    <a class="btn btn-primary" href="{{ url_for('logout') }}">Logout</a>
+                <div class="modal-body text-gray-600">Select "Logout" below if you are ready to end your current session.</div>
+                <div class="modal-footer border-top-0">
+                    <button class="btn btn-light text-gray-600 font-weight-medium" type="button" data-bs-dismiss="modal">Cancel</button>
+                    <a class="btn btn-danger px-4 font-weight-medium" href="{{ url_for('logout') }}">Logout</a>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Bootstrap core JavaScript-->
     <script src="{{ url_for('static', filename='vendor/jquery/jquery.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='vendor/jquery-easing/jquery.easing.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/sb-admin-2.min.js') }}"></script>
-    <!-- Page level plugins -->
-    <script src="{{ url_for('static', filename='vendor/chart.js/Chart.min.js') }}"></script>
-    
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
+            <script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+            <script src="{{ url_for('static', filename='vendor/jquery-easing/jquery.easing.min.js') }}"></script>
+            <script src="{{ url_for('static', filename='js/sb-admin-2.min.js') }}"></script>
+            <!-- Page level plugins -->
+            <script src="{{ url_for('static', filename='vendor/chart.js/Chart.min.js') }}"></script>
+
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <script id="alergii-data" type="application/json">{{ alergii_data | tojson | default([]) | safe }}</script>
     <script id="pie-data" type="application/json">{{ pie_data | tojson | default([]) | safe }}</script>
     
@@ -446,8 +377,11 @@
         const pieDataFlask = JSON.parse(document.getElementById('pie-data').textContent || '[]');
 
         // Apelează funcția cu datele din Flask
-        // Asigură-te că funcția drawDashboardCharts este definită și vizibilă
-        drawDashboardCharts(alergiiDataFlask, pieDataFlask);
+        // Asigură-te că funcția drawDashboardCharts este definită și vizibilă în dashboard_chart.js
+        // Note: For the best visual result, update the colors inside dashboard_chart.js to match the new CSS variables (e.g., using #0e8f8f for primary).
+        if (typeof drawDashboardCharts === 'function') {
+            drawDashboardCharts(alergiiDataFlask, pieDataFlask);
+        }
     </script>
 
 </body>
