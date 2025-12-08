@@ -1,54 +1,37 @@
-// dashboard_charts.js
+var pieLabels = JSON.parse(`{{ pie_labels | tojson | default([]) | safe }}`);
+var pieValues = JSON.parse(`{{ pie_values | tojson | default([]) | safe }}`);
 
-// Funcție care desenează graficele, acceptând datele necesare ca argumente
-function drawDashboardCharts(alergiiData, pieData) {
-    // --- Configurarea Graficului de Alergii (Linie - Stânga) ---
-    const ctxLine = document.getElementById('allergiesChart').getContext('2d');
-    new Chart(ctxLine, {
-        type: 'line',
+var ctx = document.getElementById("speciesChart").getContext("2d");
+
+if (ctx) {
+    new Chart(ctx, {
+        type: 'doughnut',  // sau 'pie' dacă vrei un pie chart simplu
         data: {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+            labels: pieLabels,
             datasets: [{
-                label: 'Allergies Detected',
-                data: alergiiData, // Corect
-                borderColor: '#696cff', 
-                tension: 0.4, 
-                fill: true,
-                backgroundColor: 'rgba(105, 108, 255, 0.1)' 
-            }]
+                data: pieValues,
+                backgroundColor: ['#0e8f8f', '#ff7043', '#36b9cc', '#f6c23e', '#1cc88a'],
+                hoverBackgroundColor: ['#0b7070', '#e65c2e', '#2c9faf', '#dda20a', '#17a673'],
+                hoverBorderColor: "rgba(234, 236, 244, 1)",
+            }],
         },
         options: {
-            responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { display: false } }, 
-            scales: {
-                y: { beginAtZero: true, grid: { display: true, borderDash: [5, 5] } },
-                x: { grid: { display: false } }
-            }
-        }
-    });
-
-    // --- Configurarea Graficului Doughnut (Dreapta) ---
-    const ctxDoughnut = document.getElementById('sourcesChart').getContext('2d');
-    new Chart(ctxDoughnut, {
-        type: 'doughnut',
-        data: {
-            labels: ['Examinations', 'Interventions', 'Animals'],
-            // CORECȚIE AICI: Datele trebuie să fie în datasets: []
-            datasets: [{ 
-                data: pieData, // Corect
-                backgroundColor: ['#696cff', '#71dd37', '#03c3ec'], 
-                borderWidth: 0,
-                hoverOffset: 4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: '75%',
             plugins: {
-                legend: { display: false }
-            }
+                tooltip: {
+                    backgroundColor: "rgb(255,255,255)",
+                    bodyColor: "#858796",
+                    borderColor: '#dddfeb',
+                    borderWidth: 1,
+                    padding: 10,
+                    displayColors: false,
+                },
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                },
+            },
+            cutout: '75%',  // în loc de cutoutPercentage
         }
     });
 }
